@@ -1,0 +1,159 @@
+/* =============================================================================
+ * style.css — Mushaf book layout (E-INK SAFE profile)
+ * -----------------------------------------------------------------------------
+ * Pure-CSS decoration only. NO SVG border-image, NO SVG backgrounds, NO
+ * box-shadow — these hang/stall low-power e-ink readers (Kindle/Kobo) on long
+ * surahs. Everything here is cheap to lay out and universally supported.
+ * The builder injects the @font-face rule where the marker below sits.
+ * ========================================================================== */
+/*__FONT_FACE__*/
+
+:root{
+  --ink:#000000;        /* text / rules */
+  --paper:#ffffff;      /* page         */
+  --muted:#2b2b2b;      /* meta         */
+  --rule:#000000;       /* hairlines    */
+}
+
+*{box-sizing:border-box;}
+html,body{margin:0;background:var(--paper);color:var(--ink);}
+body{
+  padding:0 4%;
+  font-family:'QuranArabic',"Amiri Quran","Scheherazade New",serif;
+  line-height:1.9;
+  -webkit-hyphens:none;hyphens:none;
+}
+
+/* --- Mushaf page frame (bingkai). One file = one official mushaf page, so this
+   border wraps roughly one screen — cheap to render, unlike a frame spanning a
+   whole surah. Each page file starts fresh. --- */
+.page{
+  border:4px double var(--ink);
+  padding:.7em .7em .9em;
+  margin:.25em 0;
+  page-break-before:always;
+  break-before:page;
+}
+
+/* --- Surah header banner: bordered cartouche, no image --------------------- */
+.surah-banner{
+  border:2px solid var(--ink);
+  border-radius:10px;
+  padding:.75em .5em;
+  margin:.2em 0 1em;
+  text-align:center;
+}
+.surah-name-ar{font-family:'QuranArabic',serif;font-size:1.7em;line-height:1.4;}
+.surah-name-tr{font-size:.95em;letter-spacing:.04em;color:var(--muted);margin-top:.15em;}
+.surah-meta{font-size:.7em;color:var(--muted);margin-top:.2em;direction:rtl;}
+
+/* --- Bismillah ------------------------------------------------------------ */
+.bismillah{
+  font-family:'QuranArabic',serif;direction:rtl;text-align:center;
+  font-size:1.5em;margin:.6em 0 1em;
+}
+
+/* --- Ornamental divider (single lightweight PNG, reused per surah) --------- */
+.surah-divider{
+  display:block;margin:.2em auto 1.1em;
+  width:60%;max-width:360px;height:auto;
+}
+@media (prefers-color-scheme: dark){ .surah-divider{filter:invert(1);} }
+
+/* --- Continuous Arabic flow (per mushaf page) ----------------------------- */
+/* Justified continuous flow gives the printed-mushaf look. It is cheap here
+   because each file holds only ONE page's worth of verses (~1 screen), not a
+   whole surah — so justification cost stays tiny. */
+.quran-flow{
+  direction:rtl;
+  text-align:justify;
+  text-align-last:center;
+  font-family:'QuranArabic',serif;
+  font-size:1.5em;
+  line-height:2.1;
+}
+.ayah{display:inline;}
+
+/* --- Mushaf page number (centred, bottom of each page) -------------------- */
+.page-num{
+  text-align:center;
+  font-family:'QuranArabic',serif;
+  font-size:.95em;
+  color:var(--muted);
+  margin:.7em 0 0;
+}
+
+/* --- Ayah-end medallion: single bordered ring (no box-shadow) ------------- */
+/* Auto-sizes to 1–3 digits and centres on every e-reader. */
+.ayah-num{
+  font-family:'QuranArabic',"Scheherazade New",serif;
+  display:inline-block;
+  box-sizing:content-box;
+  min-width:1.05em;
+  padding:.06em .4em;
+  margin:0 .35em;
+  font-size:.6em;
+  line-height:1.2;
+  text-align:center;
+  vertical-align:middle;
+  color:var(--ink);
+  background:var(--paper);
+  border:1.5px solid var(--ink);
+  border-radius:1.4em;
+}
+
+/* --- Bilingual verse cards (kept for future translated editions) ----------- */
+.verse-card{margin:0 0 1.1em;padding:0 0 .9em;border-bottom:1px solid var(--rule);page-break-inside:avoid;break-inside:avoid;}
+.verse-card:last-child{border-bottom:none;}
+.verse-card .quran-flow{text-align:right;text-align-last:right;margin:0 0 .5em;}
+.translation{
+  direction:ltr;text-align:left;
+  font-family:Georgia,"Times New Roman",serif;
+  font-size:1em;line-height:1.7;color:var(--muted);
+}
+.translation .tnum{font-weight:bold;color:var(--ink);margin-right:.3em;}
+
+/* --- TOC / cover ---------------------------------------------------------- */
+.toc-juz{font-weight:bold;}
+h1,h2{text-align:center;font-weight:normal;}
+.cover-wrap{margin:0;padding:0;text-align:center;}
+.cover-wrap img{max-width:100%;max-height:100vh;height:auto;}
+
+/* =============================================================================
+ * Juz 'Amma bilingual layout — IndoPak Arabic + transliterasi + terjemahan.
+ * Class convention: .teks-arab / .teks-latin / .teks-terjemahan / .garis-ayat
+ * + footnote (.penanda-footnote, .daftar-footnote). NO inline styles anywhere.
+ * ========================================================================== */
+.header-surah{text-align:center;margin:0 0 1em;}
+.judul-surah{font-family:'QuranArabic',serif;font-size:1.9em;line-height:1.5;margin:.1em 0;}
+.nama-latin{font-size:.95em;letter-spacing:.03em;color:var(--muted);margin:.1em 0;}
+.info-surah{font-size:.78em;color:var(--muted);font-weight:normal;margin:.1em 0;}
+
+.teks-arab{
+  direction:rtl;text-align:right;
+  font-family:'QuranArabic',"Scheherazade New",serif;  /* QuranArabic = font IndoPak yang di-inject builder */
+  font-size:1.7em;line-height:2.3;margin:.25em 0;
+}
+.nomor-ayat{
+  font-family:'QuranArabic',"Scheherazade New",serif;
+  display:inline-block;font-size:.55em;min-width:1em;
+  padding:.05em .4em;margin:0 .3em;vertical-align:middle;text-align:center;
+  border:1.5px solid var(--ink);border-radius:1.4em;
+}
+.teks-latin{font-style:italic;color:var(--muted);margin:.1em 0;line-height:1.6;}
+.teks-terjemahan{margin:.1em 0 .4em;line-height:1.7;}
+.garis-ayat{border:none;border-top:1px solid var(--rule);margin:.6em 0;}
+
+/* footnote: penanda sebaris + kumpulan catatan di akhir surah */
+.penanda-footnote{font-size:.7em;vertical-align:super;line-height:0;}
+.penanda-footnote a{text-decoration:none;}
+.daftar-footnote{margin-top:2em;border-top:2px solid var(--rule);padding-top:.5em;}
+.judul-footnote{font-size:1em;text-align:left;}
+.footnote{margin:.3em 0;}
+.isi-footnote{font-size:.85em;line-height:1.5;color:var(--muted);}
+.nomor-footnote{font-weight:bold;text-decoration:none;margin-right:.3em;color:var(--ink);}
+
+/* --- Dark mode (color readers only; e-ink keeps pure B/W) ----------------- */
+@media (prefers-color-scheme: dark){
+  :root{--ink:#ececec;--paper:#121212;--muted:#bcbcbc;--rule:#444444;}
+}

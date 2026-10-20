@@ -1,0 +1,52 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!-- =========================================================================
+  REFERENCE TEMPLATE — content.opf
+  builder.js generates the real file per edition (all 114 surah <item>s +
+  <itemref>s). This shows the exact shape, namespaces, font MIME type, cover
+  declaration, and reflowable rendition metadata used.
+========================================================================== -->
+<package xmlns="http://www.idpf.org/2007/opf" version="3.0"
+         unique-identifier="pub-id" xml:lang="ar" dir="rtl">
+  <metadata xmlns:dc="http://purl.org/dc/elements/1.1/">
+    <dc:identifier id="pub-id">urn:uuid:REPLACED-PER-EDITION</dc:identifier>
+    <dc:title>القرآن الكريم</dc:title>
+    <dc:title id="subtitle">Mushaf Utsmani (Hafs)</dc:title>
+    <dc:language>ar</dc:language>
+    <dc:creator>Al-Qur’an al-Karim</dc:creator>
+    <dc:publisher>quran-epub-builder</dc:publisher>
+    <dc:source>quran.com API v4</dc:source>
+    <meta property="dcterms:modified">2026-10-16T00:00:00Z</meta>
+    <meta name="cover" content="cover-image"/>
+    <meta property="rendition:layout">reflowable</meta>
+    <meta property="ibooks:specified-fonts">true</meta>
+  </metadata>
+
+  <manifest>
+    <item id="nav"         href="nav.xhtml"       media-type="application/xhtml+xml" properties="nav"/>
+    <item id="ncx"         href="toc.ncx"         media-type="application/x-dtbncx+xml"/>
+    <item id="css"         href="css/style.css"   media-type="text/css"/>
+    <item id="cover-image" href="images/cover.jpg" media-type="image/jpeg" properties="cover-image"/>
+    <item id="img-border"  href="images/border.svg" media-type="image/svg+xml"/>
+    <item id="img-rosette" href="images/rosette.svg" media-type="image/svg+xml"/>
+    <item id="img-banner"  href="images/banner.svg" media-type="image/svg+xml"/>
+    <!-- Font MIME: application/font-sfnt (.ttf) / application/vnd.ms-opentype (.otf)
+         — both pass EPUBCheck and survive Amazon's "Send to Kindle" converter. -->
+    <item id="font-ar"     href="fonts/AmiriQuran-Regular.ttf" media-type="application/font-sfnt"/>
+    <item id="cover"       href="cover.xhtml"     media-type="application/xhtml+xml"/>
+    <item id="surah-001"   href="text/surah-001.xhtml" media-type="application/xhtml+xml"/>
+    <!-- … surah-002 … surah-114 … -->
+  </manifest>
+
+  <spine toc="ncx" page-progression-direction="rtl">
+    <itemref idref="cover" linear="yes"/>
+    <itemref idref="nav"   linear="yes"/>
+    <itemref idref="surah-001" linear="yes"/>
+    <!-- … surah-002 … surah-114 … -->
+  </spine>
+
+  <guide>
+    <reference type="cover" title="Cover"     href="cover.xhtml"/>
+    <reference type="toc"   title="Daftar Isi" href="nav.xhtml"/>
+    <reference type="text"  title="Begin"     href="text/surah-001.xhtml"/>
+  </guide>
+</package>

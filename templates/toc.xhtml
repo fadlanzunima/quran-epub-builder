@@ -1,0 +1,47 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!-- =========================================================================
+  REFERENCE TEMPLATE — nav.xhtml (EPUB 3 navigation document)
+  builder.js emits the full Juz 1–30 → Surah tree. Nested <ol> gives Kindle /
+  Kobo their chapter progress bars; the landmarks nav drives "Begin Reading"
+  and accurate reading-percentage.
+========================================================================== -->
+<!DOCTYPE html>
+<html xmlns="http://www.w3.org/1999/xhtml"
+      xmlns:epub="http://www.idpf.org/2007/ops"
+      xml:lang="ar" lang="ar" dir="rtl">
+<head>
+  <meta charset="UTF-8"/>
+  <title>Daftar Isi</title>
+  <link rel="stylesheet" type="text/css" href="css/style.css"/>
+</head>
+<body class="nav" dir="rtl">
+
+  <nav epub:type="toc" id="toc" role="doc-toc">
+    <h1>Daftar Isi / فهرس</h1>
+    <ol>
+      <li class="toc-juz"><a href="text/surah-001.xhtml#ayah-1-1">Juz 1 — الجزء ١</a>
+        <ol>
+          <li><a href="text/surah-001.xhtml#ayah-1-1">1. Al-Fatihah</a></li>
+          <li><a href="text/surah-002.xhtml#ayah-2-1">2. Al-Baqarah</a></li>
+        </ol>
+      </li>
+      <li class="toc-juz"><a href="text/surah-002.xhtml#ayah-2-142">Juz 2 — الجزء ٢</a>
+        <ol>
+          <li><a href="text/surah-002.xhtml#ayah-2-142">2. Al-Baqarah (cont.)</a></li>
+        </ol>
+      </li>
+      <!-- … Juz 3 … Juz 30 … -->
+    </ol>
+  </nav>
+
+  <nav epub:type="landmarks" id="landmarks" hidden="hidden">
+    <h2>Landmarks</h2>
+    <ol>
+      <li><a epub:type="cover" href="cover.xhtml">Cover</a></li>
+      <li><a epub:type="toc" href="nav.xhtml#toc">Table of Contents</a></li>
+      <li><a epub:type="bodymatter" href="text/surah-001.xhtml">Begin Reading</a></li>
+    </ol>
+  </nav>
+
+</body>
+</html>

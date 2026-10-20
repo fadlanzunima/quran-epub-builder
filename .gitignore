@@ -1,0 +1,11 @@
+node_modules/
+.cache/
+build/
+.claude/
+
+# dist/ is tracked on purpose: the built .epub deliverables are committed.
+
+# Keep assets structure but ignore large binaries if you prefer:
+# assets/fonts/*.ttf
+# assets/cover.jpg
+# assets/divider.png
