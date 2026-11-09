@@ -19,6 +19,7 @@ keduanya sudah terbukti sync.
 | 3 | `mimetype` = entry **pertama** di ZIP dan **`Stored`** (tanpa kompresi, tanpa extra-field) | Syarat OCF. Kalau tidak, importer bisa menolak. |
 | 4 | Ekstensi file **`.kepub.epub`** | Menandakan format Kobo (dapat paginasi/"x mins to go"). |
 | 5 | opf valid: `<package unique-identifier="X">` cocok dengan `<dc:identifier id="X">`, ada `dcterms:modified`, spine tidak kosong | Validitas EPUB3 dasar. |
+| 6 | **Hanya SATU `<dc:title>`** — jangan ada `<dc:title id="subtitle">` tanpa `<meta refines>` title-type | **TERBUKTI:** dua `<dc:title>` ambigu bikin importer Kobo **melewati buku** walau `<guide>` ada. Al-Quran & Juz 'Amma dulu tak muncul justru karena ini. Pakai judul Latin (hindari judul Arab-only). |
 
 Template `<guide>` (href relatif ke folder opf, mis. `OEBPS/`), taruh **sebelum `</package>`**:
 
