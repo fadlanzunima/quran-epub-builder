@@ -82,6 +82,40 @@ Template `<guide>` (href relatif ke folder opf), taruh **sebelum `</package>`**:
 
 ---
 
+## 6. CHECKPOINT — status per 9 Nov 2026 (Kobo Clara Colour)
+
+### ✅ Beres & berfungsi
+- **Indonesia, Inggris, Dzikir**: muncul + bisa dibuka (diimpor nickel sebagai kepub).
+- **`<guide>`** = syarat agar muncul (TERBUKTI).
+- **Font `Amiri Quran`** = TERBUKTI menghilangkan **titik hitam** harakat/waqf + shaping jauh
+  lebih baik di Clara Colour (dikonfirmasi pada **Inggris**). Sudah diterapkan juga ke
+  **Indonesia** (embed + font utama) — *tinggal konfirmasi visual saat dibuka*.
+- Catatan kecil: kata "ar-Raḥmānir-Raḥīm" di Amiri gayanya agak beda dari mushaf LPMQ
+  (kosmetik, bukan rusak).
+
+### ❌ Belum selesai (lanjut besok)
+- **Al-Quran (Arab-only) & Juz 'Amma TIDAK bisa diimpor** nickel — baik `.kepub.epub` maupun
+  `.epub`, dengan/tanpa koboSpan, dengan/tanpa `<guide>`. Scanner melewatkannya (alasan pasti
+  belum ketemu; file 100% valid). **Injeksi DB** membuatnya muncul tapi **nickel menolak
+  membukanya** (error "couldn't be opened" / DRM palsu).
+
+### ▶️ Rencana besok (urut prioritas)
+1. **Jalur paling andal: Calibre + plugin KoboTouchExtended** untuk AQ & Juz — mendaftarkan
+   kepub ke DB cara yang nickel terima (muncul DAN bisa dibuka). Ini kemungkinan solusi final.
+2. Alternatif file-side: **rebuild AQ/Juz agar struktur opf/nav identik** dengan edisi yang
+   berhasil (EN/ID pakai `toc.xhtml`; AQ/Juz pakai `nav.xhtml` — uji apakah ini pembedanya).
+3. Alternatif injeksi: buat **baris bab `ContentType=9`** (seperti KoboTouchExtended) agar buku
+   hasil injeksi bisa dibuka.
+4. Terapkan **Amiri Quran** ke semua edisi lain + pertimbangkan tweak satu kata di atas.
+
+### ⚠️ Operasional DB (pelajaran)
+- Menulis `KoboReader.sqlite` **bersamaan** dengan copy file ke drive → DB bisa **malformed**
+  (index rusak / UNIQUE ContentID duplikat). **Jangan** tulis DB sambil menyalin file.
+- **Selalu backup** sebelum menyentuh DB. Pemulihan: restore backup bersih + **hapus
+  `-wal`/`-shm`**. Backup bersih tersimpan di scratchpad (`KoboReader.backup_*.sqlite`).
+
+---
+
 ## 3. Setelan perangkat & side-load
 
 - **Side-load**: copy file ke root drive (bukan folder `.kobo`) → **eject** → kalau tak ada
