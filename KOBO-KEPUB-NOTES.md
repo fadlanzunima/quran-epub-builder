@@ -1,93 +1,96 @@
-# Catatan Penyesuaian Kobo (KEPUB) — Al-Qur'an & Dzikir
+# Catatan Penyesuaian Kobo — Al-Qur'an & Dzikir
 
-Catatan praktis supaya membuat/ekspor edisi **KEPUB untuk Kobo** ke depannya gampang dan
-langsung bisa sync. Semua poin di bawah hasil temuan nyata saat menyiapkan edisi
-Indonesia, Inggris, Juz 'Amma, Dzikir, dan Arab-only.
+Catatan praktis supaya membuat/ekspor edisi untuk Kobo ke depannya gampang. Perangkat uji:
+**Kobo Clara Colour**. Status tiap poin ditandai: ✅ TERVERIFIKASI di device · ⚠️ HIPOTESIS/
+belum pasti · ❌ TERBUKTI SALAH (jangan diandalkan).
+
+> Edisi yang **terbukti muncul & bisa dibuka** di Clara Colour: **Dzikir, Indonesia, Inggris**
+> (impor normal oleh nickel sebagai kepub). Edisi **Al-Quran (Arab-only) & Juz 'Amma**
+> awalnya TIDAK bisa diimpor scanner — lihat Bagian 5.
 
 ---
 
-## 1. Checklist file KEPUB yang PASTI muncul & sync di Kobo
+## 1. Agar kepub side-load MUNCUL di library
 
-Sebuah `.kepub.epub` baru akan muncul di library Kobo (side-load USB) **hanya jika**
-semua ini terpenuhi. Pakai edisi **`Al-Quran.kepub.epub`** / **`Juz 'Amma`** sebagai acuan —
-keduanya sudah terbukti sync.
-
-| # | Syarat | Kenapa |
+| # | Syarat | Status |
 |---|--------|--------|
-| 1 | **`<guide>` EPUB2 ADA di opf** dengan `type="cover"`, `type="toc"`, `type="text"` | **PALING KRITIS.** Importer side-load Kobo memakai `<guide>` untuk mengenali buku. Tanpa ini buku **diam-diam tidak muncul** walau file 100% valid. |
-| 2 | `<meta name="cover" content="cover-image"/>` (gaya EPUB2) di `<metadata>` | Supaya cover tampil di library. |
-| 3 | `mimetype` = entry **pertama** di ZIP dan **`Stored`** (tanpa kompresi, tanpa extra-field) | Syarat OCF. Kalau tidak, importer bisa menolak. |
-| 4 | Ekstensi file **`.kepub.epub`** | Menandakan format Kobo (dapat paginasi/"x mins to go"). |
-| 5 | opf valid: `<package unique-identifier="X">` cocok dengan `<dc:identifier id="X">`, ada `dcterms:modified`, spine tidak kosong | Validitas EPUB3 dasar. |
-| 6 | **Hanya SATU `<dc:title>`** — jangan ada `<dc:title id="subtitle">` tanpa `<meta refines>` title-type | **TERBUKTI:** dua `<dc:title>` ambigu bikin importer Kobo **melewati buku** walau `<guide>` ada. Al-Quran & Juz 'Amma dulu tak muncul justru karena ini. Pakai judul Latin (hindari judul Arab-only). |
+| 1 | **`<guide>` EPUB2 di opf** (`type="cover"`, `type="toc"`, `type="text"`) | ✅ **Paling kritis.** Indonesia/Inggris/Dzikir baru muncul setelah `<guide>` ditambahkan. Tanpa `<guide>` buku diam-diam tak muncul walau file 100% valid. |
+| 2 | `<meta name="cover" content="cover-image"/>` (EPUB2) | ✅ untuk cover di library |
+| 3 | `mimetype` = entry **pertama** + **`Stored`** (tanpa kompresi/extra-field) | ✅ syarat OCF |
+| 4 | opf valid: `unique-identifier` cocok `dc:identifier`, ada `dcterms:modified`, spine terisi | ✅ |
+| 5 | Idealnya **satu `<dc:title>`** (hindari `<dc:title id="subtitle">` tanpa `refines`) | ⚠️ praktik baik, TAPI **bukan** penyebab AQ/Juz gagal impor (sudah dicoba, tetap gagal). Jangan andalkan sebagai "obat" impor. |
 
-Template `<guide>` (href relatif ke folder opf, mis. `OEBPS/`), taruh **sebelum `</package>`**:
+Template `<guide>` (href relatif ke folder opf), taruh **sebelum `</package>`**:
 
 ```xml
 <guide>
   <reference type="cover" title="Cover" href="cover.xhtml"/>
   <reference type="toc"   title="Daftar Isi" href="toc.xhtml"/>   <!-- atau nav.xhtml -->
-  <reference type="text"  title="Begin" href="text/surah-001.xhtml"/> <!-- halaman baca pertama -->
+  <reference type="text"  title="Begin" href="text/surah-001.xhtml"/>
 </guide>
 ```
 
-> Gejala khas kalau `<guide>` hilang: **"sudah dicopy tapi tidak muncul di library"**.
-> Edisi Al-Quran & Juz 'Amma muncul; Indonesia/Inggris/Dzikir dulu tidak — persis karena ini.
-
 ---
 
-## 2. Resep konversi: EPUB biasa → KEPUB Kobo
+## 2. Resep konversi EPUB → KEPUB (koboSpan)
 
-Langkah yang diterapkan ke tiap edisi (lihat script di `scripts/` bila sudah di-commit,
-atau rekonstruksi dari catatan ini):
-
-1. **Inject `koboSpan`** ke `title.xhtml` + semua file surah/isi (JANGAN cover & nav).
-   - Skema id: `kobo.{paragraf}.{segmen}`.
-   - `paragraf` **naik tiap elemen blok** (section, header, div, p, h1–h6, img, hr, aside…).
-   - `paragraf` **tidak naik** untuk elemen inline (span, a, sup, sub, b, i, em, br…).
-   - `segmen` reset tiap blok baru, **naik per text-node** di dalam subtree blok itu.
-   - **Tanpa sentence-splitting** — satu text-node = satu `koboSpan` (segmen maks = 2).
-   - Mulai hitung dari elemen pertama di dalam `<body>` (body sendiri tidak dihitung).
-2. **Pin font Arab `!important`** di akhir CSS (Kobo menimpa font publisher dengan font UI-nya
-   yang tak punya glyph Arab → tofu). Selektor memakai kelas Arab edisi itu, mis.:
-   ```css
-   .arabic, .arabic *, .surah-title, .bismillah, .title-arabic, .ayah-num {
-     font-family: '<font Arab embed>', 'Amiri', 'Noto Naskh Arabic', serif !important;
-   }
-   ```
-   (Juz 'Amma pakai kelas `.teks-arab`, `.judul-surah`, `.basmalah`, `.nomor-ayat`, dst.)
-3. **Strip nama Arab di ToC/nav** (`"78. An-Naba — النبإ"` → `"78. An-Naba"`) supaya tak tofu
-   di menu native Kobo. Regex: buang ` — ` + rangkaian huruf Arab sampai `<`.
-4. **opf**: suffix `-kobo` pada `dc:identifier`, tambah ` (Kobo)` pada `dc:title` utama,
-   **tambahkan `<guide>`** (poin 1), tambah `ibooks:specified-fonts=true` (parity).
+1. **Inject `koboSpan`** ke `title.xhtml` + semua file isi (JANGAN cover & nav). Skema
+   `kobo.{paragraf}.{segmen}`: `paragraf` naik tiap elemen **blok** (section/header/div/p/
+   h1–h6/img/hr/aside), **tidak** untuk inline (span/a/sup/sub/b/i/br). `segmen` reset tiap
+   blok, +1 per text-node. **Tanpa** sentence-split (segmen maks 2). Mulai dari elemen
+   pertama di dalam `<body>`.
+2. **Pin font Arab `!important`** di akhir CSS (Kobo menimpa font publisher). Selektor sesuai
+   kelas Arab tiap edisi (`.arabic`, atau `.teks-arab/.judul-surah/.basmalah/.nomor-ayat`).
+3. **Strip nama Arab di ToC/nav** (`"78. An-Naba — النبإ"` → `"78. An-Naba"`).
+4. **opf**: suffix `-kobo` di `dc:identifier`, ` (Kobo)` di `dc:title` utama, tambah
+   `<guide>` (Bagian 1), `ibooks:specified-fonts=true`.
 5. **Repackage**: `mimetype` pertama + `Stored`, sisanya `Deflate`.
-6. **(khusus Al-Qur'an)** perbaiki nomor Juz di header surah bila salah
-   (bug lama: nomor Juz = nomor surah; At-Tin tampil "Juz 95" seharusnya "Juz 30").
-   Mapping surah→juz-awal diambil dari `toc.ncx` (tiap surah ter-nest di bawah juz awalnya).
+6. **(Al-Qur'an)** perbaiki nomor Juz header bila salah (bug lama: Juz = nomor surah; At-Tin
+   "Juz 95" → "Juz 30"). Mapping surah→juz-awal dari `toc.ncx`.
 
 ---
 
-## 3. Setelan di perangkat Kobo (sisi pembaca)
+## 5. Temuan TERVERIFIKASI di Kobo Clara Colour (debugging Nov 2026)
 
-- **Huruf Arab putus-putus (tidak menyambung)?** Di buku → menu **Aa** → pilih
-  **"Publisher default font" / aktifkan "Use publisher styles"**. Jangan pilih font bawaan
-  Kobo — font Kobo tidak melakukan *shaping* Arab dan menimpa CSS `!important`.
-- **Side-load**: copy `.kepub.epub` ke root drive Kobo (jangan di folder `.kobo`),
-  lalu **eject/cabut dengan aman** — impor baru jalan saat eject.
-- Alternatif "proper" (pertahankan fitur kepub penuh): **Calibre + plugin KoboTouchExtended**
-  → *Send to device*; mendaftarkan kepub ke database Kobo.
+### 5a. Impor & buka
+- ✅ **Menyuntik baris ke `KoboReader.sqlite` membuat buku MUNCUL, tapi nickel MENOLAK
+  MEMBUKANYA** — error *"couldn't be opened"* atau *"not authorized / Adobe DRM"*. nickel
+  hanya mau membuka buku yang **ia impor sendiri**. Jadi injeksi DB **bukan** solusi lengkap.
+- ✅ **DRM palsu dari injeksi**: kloning baris kepub membawa `IsEncrypted='true'` → untuk
+  `application/epub+zip` memicu error DRM Adobe. Tetap tak cukup walau di-`false`-kan, karena
+  akar masalahnya buku tak diimpor nickel.
+- ⚠️ **Scanner nickel melewatkan AQ/Juz sebagai `.kepub.epub`** (alasan pasti belum ketahuan;
+  file 100% valid — mimetype/zip/opf/guide semua benar). Dugaan: jalur impor KEPUB lebih ketat.
+- ⚠️ **Rencana perbaikan**: rename ke **`.epub` biasa** + **hapus baris injeksi** → biarkan
+  nickel memindai & mengimpor via jalur EPUB sederhana (belum dikonfirmasi berhasil).
+- ✅ **Reboot penuh** memicu scan ulang `/mnt/onboard` + membuang cache nickel (DRM/err lama).
+  Eject saja sering tak memicu "Importing content".
+- ℹ️ ContentID side-load = `file:///mnt/onboard/<namafile>` (berbasis **path**, bukan metadata).
+  Backup `KoboReader.sqlite` sebelum menyentuhnya.
+
+### 5b. Render Arab (KRUSIAL)
+- ✅ **Clara Colour render Arab SEDERHANA dengan benar** (Dzikir: harakat basic) ...
+- ❌ ...tapi **GAGAL pada teks Qurani Uthmani penuh** (banyak harakat + tanda waqf):
+  - Font **LPMQ** / **Scheherazade** → huruf **putus-putus** (shaping gagal).
+  - Font **KFGQPC Uthmanic Script HAFS** → harakat/waqf jadi **titik hitam** (glyph hilang).
+- ❌ **Setelan pembaca TIDAK menyelesaikan** (Justification Off / Publisher font sudah dicoba,
+  tetap putus). Jadi ini **keterbatasan font+engine**, harus diperbaiki di level file.
+- ⚠️ **Perbaikan sedang diuji: ganti font Arab ke `Amiri Quran`** (cakupan Qurani lengkap).
+  Diterapkan ke edisi Inggris dulu — **tunggu konfirmasi** sebelum dijadikan standar.
+- 📌 Koreksi untuk Bagian 3: saran lama "pakai Publisher font untuk menyembuhkan Arab putus"
+  **TIDAK terbukti** di Clara Colour. Yang menentukan adalah **pilihan font di file**.
 
 ---
 
-## 4. Validasi cepat sebelum kirim ke Kobo
+## 3. Setelan perangkat & side-load
 
-Cek minimal ini untuk tiap `.kepub.epub`:
+- **Side-load**: copy file ke root drive (bukan folder `.kobo`) → **eject** → kalau tak ada
+  "Importing content", **reboot** untuk memaksa scan.
+- Alternatif "proper": **Calibre + plugin KoboTouchExtended** (mendaftarkan kepub ke DB dgn
+  benar — termasuk membuatnya bisa dibuka, beda dari injeksi manual mentah).
 
-- [ ] `<guide>` ada: `cover`, `toc`, `text` (dan href-nya benar-benar ada di dalam epub)
-- [ ] `mimetype` = entry pertama, method `Stored`
-- [ ] Semua file XHTML/opf/ncx **well-formed** (parse XML tanpa error)
-- [ ] `koboSpan` id **unik** per dokumen, tidak ada duplikat
-- [ ] Semua `href` manifest **resolve** (tidak ada file hilang)
-- [ ] Font Arab embed + di-pin `!important`
-
-Bandingkan selalu dengan acuan `Al-Quran.kepub.epub` / `Juz 'Amma & Terjemahan.kepub.epub`.
+## 4. Validasi file sebelum kirim
+- [ ] `<guide>` (cover/toc/text) ada & href-nya resolve
+- [ ] `mimetype` pertama + `Stored`
+- [ ] Semua XHTML/opf/ncx well-formed; `koboSpan` id unik; href manifest resolve
+- [ ] Font Arab embed + di-pin; untuk teks Qurani penuh pakai font bercakupan lengkap (uji dulu)
