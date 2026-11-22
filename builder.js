@@ -349,9 +349,14 @@ body{padding:0 4%;font-family:'QuranArabic',"Amiri Quran","Scheherazade New",ser
 .translation .tnum{font-weight:bold;color:var(--ink);margin-right:.3em;}
 .toc-juz{font-weight:bold;}
 h1,h2{text-align:center;font-weight:normal;}
-.cover-wrap{margin:0;padding:0;text-align:center;}
-.cover-wrap img{max-width:100%;max-height:100vh;height:auto;}
+.cover-wrap{width:100%;height:100vh;min-height:100%;margin:0;padding:0;display:flex;align-items:center;justify-content:center;overflow:hidden;text-align:center;background:var(--paper);}
+.cover-wrap img{width:100%;height:100%;max-width:100%;max-height:100vh;object-fit:contain;object-position:center;}
 /* ---- Dark mode (color readers only; e-ink stays high-contrast B/W) ---- */
+@media (prefers-color-scheme: light){
+  :root{--ink:#455047;--paper:#f7f3e8;--muted:#687268;--rule:#879486;}
+  .page,.surah-banner,.ayah-num{border-color:#879486;}
+  .ayah-num{background:#f7f3e8;}
+}
 @media (prefers-color-scheme: dark){
   :root{--ink:#ececec;--paper:#121212;--muted:#bcbcbc;--rule:#444;}
 }
