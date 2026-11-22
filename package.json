@@ -8,6 +8,7 @@
     "build": "node builder.js",
     "build:arab": "node builder.js --only=arab",
     "build:indopak": "node builder.js --only=indopak",
+    "build:clara-pdf": "node build-clara-pdf.js",
     "validate": "node validate.js",
     "check": "epubcheck \"dist/Al-Quran (Uthmani Format).epub\" && epubcheck \"dist/Al-Quran (IndoPak Format).epub\""
   },
