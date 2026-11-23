@@ -12,6 +12,7 @@
     "build:x4-epub": "node build-x4-epub.js",
     "build:x4-pdf": "node build-x4-pdf.js",
     "build:x4": "node build-x4-epub.js && node build-x4-pdf.js",
+    "preview:x4": "node preview-x4.js",
     "validate": "node validate.js",
     "check": "epubcheck \"dist/Al-Quran (Uthmani Format).epub\" && epubcheck \"dist/Al-Quran (IndoPak Format).epub\""
   },

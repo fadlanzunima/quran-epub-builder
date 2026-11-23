@@ -37,13 +37,13 @@ const X4_HEIGHT_MM = (X4_H_PX / X4_PPI) * MM_PER_IN;  // 92.3636 mm
 
 // --- Tunables (bump these if you want bigger Arabic on the X4) ----------------
 const X4 = {
-  marginMm: 2.4,          // inner page margin all round
-  arabicPx: 15,           // base Arabic flow size (continuous mushaf flow)
-  arabicLineHeight: 1.95, // Arabic line spacing
-  surahNameArPx: 20,      // surah title (Arabic)
-  bismillahPx: 16,
-  ayahNumEm: 0.62,        // ayah-end medallion relative to flow
-  pageNumPx: 8.5,
+  marginMm: 2.2,          // inner page margin all round
+  arabicPx: 17.5,         // base Arabic flow size (continuous mushaf flow)
+  arabicLineHeight: 2.0,  // Arabic line spacing
+  surahNameArPx: 23,      // surah title (Arabic)
+  bismillahPx: 18,
+  ayahNumEm: 0.6,         // ayah-end medallion relative to flow
+  pageNumPx: 9,
 };
 
 const PRINT_CSS = `
