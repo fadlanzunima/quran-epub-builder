@@ -27,7 +27,12 @@ Other modes:
 node builder.js --only=arab       # Uthmani edition only
 node builder.js --only=indopak    # IndoPak edition only
 node builder.js --offline         # rebuild from cached API data in ./.cache (no network)
+npm run build:clara-pdf           # create a full-page PDF for Kobo Clara
 ```
+
+`npm run build:clara-pdf` uses the Kobo Clara page size and
+`assets/Gemini_Generated_Image_tzoyi8tzoyi8tzoy.jpg` as a full-page cover. It
+requires Chrome or Microsoft Edge and writes `dist/Al-Quran Kobo Clara.pdf`.
 
 Output:
 
