@@ -35,6 +35,17 @@ const EPUB_PATH = path.join(ROOT, 'dist', 'Al-Quran.epub');
 const COVER_PATH = path.join(ROOT, 'assets', 'Gemini_Generated_Image_tzoyi8tzoyi8tzoy.jpg');
 const MM_PER_IN = 25.4;
 
+// Quran font baked into the PDF, overriding the EPUB's embedded @font-face.
+// LPMQ Isep Misbah (Kemenag Mushaf Standar Indonesia) renders the iqlab/tajwid
+// marks cleanly; KFGQPC shows the small meem as a dark blob on e-ink. To switch,
+// point this at another TTF/OTF in assets/fonts/ (e.g. AmiriQuran-Regular.ttf,
+// format 'truetype'; or UthmanicHafs.otf, format 'opentype').
+const QURAN_FONT = {
+  file: 'LPMQ-IsepMisbah.ttf',
+  src: path.join(ROOT, 'assets', 'fonts', 'LPMQ-IsepMisbah.ttf'),
+  fmt: 'truetype',
+};
+
 // --- Device profiles ---------------------------------------------------------
 // resPx: [width, height] in portrait. ppi: panel density. type: CSS sizes tuned
 // so Arabic stays comfortable at that physical screen size.
@@ -85,6 +96,7 @@ function printCss(dev) {
   const g = geometry(dev);
   const t = dev.type;
   return `
+@font-face{font-family:'QuranArabic';font-style:normal;font-weight:400;src:url('fonts/${QURAN_FONT.file}') format('${QURAN_FONT.fmt}');}
 @page{size:${g.widthMm}mm ${g.heightMm}mm;margin:0}
 html,body{width:${g.widthMm}mm;margin:0!important;padding:0!important;background:#ffffff!important;color:#000000!important;-webkit-print-color-adjust:exact!important;print-color-adjust:exact!important}
 body{box-sizing:border-box;padding:${t.marginMm}mm!important;font-size:${t.arabicPx}px}
@@ -186,6 +198,11 @@ async function buildOne(key) {
       fs.writeFileSync(target, await entry.async('nodebuffer'));
     }
 
+    // Bake the chosen Quran font in (printCss re-points 'QuranArabic' to it).
+    if (!fs.existsSync(QURAN_FONT.src)) throw new Error(`Quran font not found: ${QURAN_FONT.src}`);
+    fs.mkdirSync(path.join(oebpsDir, 'fonts'), { recursive: true });
+    fs.copyFileSync(QURAN_FONT.src, path.join(oebpsDir, 'fonts', QURAN_FONT.file));
+
     const textDir = path.join(oebpsDir, 'text');
     const surahs = fs.readdirSync(textDir)
       .filter(name => /^surah-\d{3}\.xhtml$/.test(name)).sort();
@@ -246,7 +263,7 @@ async function main() {
   for (const key of keys) await buildOne(key);
 }
 
-module.exports = { DEVICES, geometry, printCss };
+module.exports = { DEVICES, geometry, printCss, QURAN_FONT };
 
 if (require.main === module) {
   main().catch(error => {

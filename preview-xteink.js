@@ -20,7 +20,7 @@ const path = require('path');
 const { spawnSync, execFileSync } = require('child_process');
 const { pathToFileURL } = require('url');
 const JSZip = require('jszip');
-const { DEVICES, geometry, printCss } = require('./build-xteink-pdf.js');
+const { DEVICES, geometry, printCss, QURAN_FONT } = require('./build-xteink-pdf.js');
 
 const ROOT = __dirname;
 const EPUB_PATH = path.join(ROOT, 'dist', 'Al-Quran.epub');
@@ -85,6 +85,12 @@ async function main() {
       const target = path.join(tmp, name);
       fs.mkdirSync(path.dirname(target), { recursive: true });
       fs.writeFileSync(target, await zip.file(name).async('nodebuffer'));
+    }
+
+    // Bake in the same Quran font as the PDF so the preview matches.
+    if (fs.existsSync(QURAN_FONT.src)) {
+      fs.mkdirSync(path.join(oebps, 'fonts'), { recursive: true });
+      fs.copyFileSync(QURAN_FONT.src, path.join(oebps, 'fonts', QURAN_FONT.file));
     }
 
     let cards = '';

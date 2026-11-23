@@ -81,6 +81,13 @@ Ini jalur native X4 dan paling nyaman dibaca (bisa ubah ukuran font di device).
 3. Kalau firmware menolak PDF mentah, jalankan dulu lewat **app resmi Xteink**
    untuk konversi, baru transfer.
 
+**Font PDF:** di-"bakar" dengan **LPMQ Isep Misbah** (Mushaf Standar Indonesia,
+Kemenag) — merender tanda tajwid *iqlab* (meem kecil) dengan bersih; KFGQPC
+menampilkannya seperti bercak hitam di e-ink. Ganti lewat konstanta `QURAN_FONT`
+di [build-xteink-pdf.js](build-xteink-pdf.js) (mis. ke `AmiriQuran-Regular.ttf`,
+OFL — tanda iqlab paling tegas & bebas lisensi untuk publik). Lisensi LPMQ: aman
+untuk pribadi/dakwah; untuk publikasi publik/komersial, konfirmasi izin Kemenag.
+
 Mau Arab lebih besar/kecil, atau tambah profil device baru? Edit `DEVICES` di
 [build-xteink-pdf.js](build-xteink-pdf.js) (`resPx`, `ppi`, `arabicPx`,
 `arabicLineHeight`, dst). Cek hasilnya tanpa build penuh: `npm run preview:x4`
