@@ -56,8 +56,8 @@ body{padding:0 3%;font-family:'QuranArabic',"Amiri Quran","Scheherazade New",ser
 
 .page-num{text-align:center;font-family:'QuranArabic',serif;font-size:.9em;color:var(--muted);margin:.5em 0 0;}
 
-/* Ayah-end medallion kept (cheap single border, no box-shadow). */
-.ayah-num{font-family:'QuranArabic',"Scheherazade New",serif;display:inline-block;box-sizing:content-box;min-width:1.05em;padding:.04em .32em;margin:0 .28em;font-size:.58em;line-height:1.2;text-align:center;vertical-align:middle;color:var(--ink);background:var(--paper);border:1.5px solid var(--ink);border-radius:1.4em;}
+/* Ayah-end marker: font's own ornament motif, no CSS pill/background. */
+.ayah-num{font-family:'QuranArabic',"Scheherazade New",serif;display:inline-block;margin:0 .2em;font-size:.9em;line-height:1.2;vertical-align:middle;white-space:nowrap;color:var(--ink);}
 
 .toc-juz{font-weight:bold;}
 h1,h2{text-align:center;font-weight:normal;}

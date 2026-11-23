@@ -50,7 +50,7 @@ const DEVICES = {
       arabicLineHeight: 2.0,
       surahNameArPx: 23,
       bismillahPx: 18,
-      ayahNumEm: 0.6,
+      ayahNumEm: 0.9,
       pageNumPx: 9,
     },
   },
@@ -65,7 +65,7 @@ const DEVICES = {
       arabicLineHeight: 1.95,
       surahNameArPx: 21,
       bismillahPx: 16.5,
-      ayahNumEm: 0.6,
+      ayahNumEm: 0.9,
       pageNumPx: 8.5,
     },
   },
@@ -104,7 +104,7 @@ body{box-sizing:border-box;padding:${t.marginMm}mm!important;font-size:${t.arabi
 .bismillah{font-size:${t.bismillahPx}px!important;margin:.25em 0 .35em!important}
 .surah-divider{display:none!important}
 .page-num{font-size:${t.pageNumPx}px!important;margin:.2em 0 .6em!important}
-.ayah-num{font-size:${t.ayahNumEm}em!important;margin:0 .15em!important;padding:.02em .22em!important}
+.ayah-num{font-size:${t.ayahNumEm}em!important;margin:0 .2em!important;padding:0!important;min-width:0!important;border:0!important;background:none!important;border-radius:0!important;color:#000!important;white-space:nowrap!important}
 `;
 }
 
