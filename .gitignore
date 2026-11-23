@@ -4,8 +4,9 @@ build/
 .claude/
 
 # dist/ is tracked on purpose: the built .epub deliverables are committed.
-# ...except the preview-x4.js QA screenshot (regenerate it with `npm run preview:x4`).
+# ...except the preview-xteink.js QA screenshots (regenerate with `npm run preview:x4` / `preview:x3`).
 dist/x4-preview.png
+dist/x3-preview.png
 
 # Keep assets structure but ignore large binaries if you prefer:
 # assets/fonts/*.ttf

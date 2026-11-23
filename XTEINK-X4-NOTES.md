@@ -32,14 +32,20 @@ sekelas: X4 Pro / X4 Classic). Edisi yang dipakai: **Uthmani Arab-only**
 Jalankan:
 
 ```bash
-npm run build:x4-epub    # -> dist/Al-Quran Xteink X4.epub
-npm run build:x4-pdf     # -> dist/Al-Quran Xteink X4.pdf   (butuh Chrome/Edge)
+npm run build:x4-epub    # -> dist/Al-Quran Xteink X4.epub  (reflow: cocok X3, X4, X4 Pro)
+npm run build:xteink-pdf # -> PDF X4 + X3 sekaligus         (butuh Chrome/Edge)
+npm run build:x4-pdf     # -> dist/Al-Quran Xteink X4.pdf   (X4 / X4 V2 / X4 Pro)
+npm run build:x3-pdf     # -> dist/Al-Quran Xteink X3.pdf   (X3)
 ```
 
 | File | Kapan dipakai | Catatan |
 |---|---|---|
-| **Al-Quran Xteink X4.epub** | Baca native di X4; teks **reflow mengikuti layar** & setting ukuran font device | Dekorasi diringankan untuk ESP32 (bingkai & divider dibuang). **Perlu font `.bin`** agar Arab muncul. |
-| **Al-Quran Xteink X4.pdf** | Jalur paling pasti — Arab sudah "dibakar", tiap halaman = 1 layar X4 (480×800) | Tidak perlu font device. Jika X4 menolak PDF mentah, konversi dulu via app resmi Xteink. |
+| **Al-Quran Xteink X4.epub** | Baca native (reflow); cocok **semua** model (X3/X4/X4 Pro) karena ikut layar | Dekorasi diringankan untuk ESP32 (bingkai & divider dibuang). **Perlu font `.bin`** agar Arab muncul. |
+| **Al-Quran Xteink X4.pdf** | Jalur paling pasti untuk **X4 / X4 V2 / X4 Pro** — tiap halaman = 1 layar (480×800) | Arab sudah "dibakar", tidak perlu font device. |
+| **Al-Quran Xteink X3.pdf** | Jalur paling pasti untuk **X3** — tiap halaman = 1 layar (~528×792 @ 259 PPI) | Resolusi X3 belum resmi; cek Settings → About, lalu sesuaikan `DEVICES.x3.resPx` bila beda. |
+
+> PDF itu **fixed-size per device**: PDF X4 bila dibuka di X3 akan *letterbox* (beda
+> rasio), jadi pakai PDF sesuai modelnya. EPUB reflow cocok untuk semua model.
 
 ---
 
@@ -64,18 +70,22 @@ Ini jalur native X4 dan paling nyaman dibaca (bisa ubah ukuran font di device).
 > atau belum dipilih sebagai font aktif. Ulangi langkah 2–3 dengan rentang
 > Unicode Arab disertakan.
 
-## Cara 2 — PDF ukuran X4 (paling pasti, tanpa font device)
+## Cara 2 — PDF ukuran device (paling pasti, tanpa font device)
 
-1. `npm run build:x4-pdf` → `dist/Al-Quran Xteink X4.pdf`.
-   Tiap halaman tepat **55.43 × 92.36 mm = 480×800 px @ 220 PPI**, teks mengalir
-   kontinu (tidak ada halaman kosong / terpotong).
-2. Salin PDF ke microSD dan buka. Karena halaman = ukuran layar, tampil 1:1.
+1. `npm run build:x4-pdf` (X4) atau `npm run build:x3-pdf` (X3).
+   - X4: tiap halaman **55.43 × 92.36 mm = 480×800 px @ 220 PPI**.
+   - X3: tiap halaman **~51.78 × 77.67 mm = 528×792 px @ 259 PPI**.
+   Teks mengalir kontinu (tidak ada halaman kosong / terpotong).
+2. Salin PDF (sesuai modelnya) ke microSD dan buka. Karena halaman = ukuran
+   layar, tampil 1:1 tanpa letterbox.
 3. Kalau firmware menolak PDF mentah, jalankan dulu lewat **app resmi Xteink**
    untuk konversi, baru transfer.
 
-Mau Arab lebih besar/kecil di PDF? Edit konstanta `X4` di
-[build-x4-pdf.js](build-x4-pdf.js) (`arabicPx`, `arabicLineHeight`, dst) lalu
-build ulang.
+Mau Arab lebih besar/kecil, atau tambah profil device baru? Edit `DEVICES` di
+[build-xteink-pdf.js](build-xteink-pdf.js) (`resPx`, `ppi`, `arabicPx`,
+`arabicLineHeight`, dst). Cek hasilnya tanpa build penuh: `npm run preview:x4`
+atau `npm run preview:x3` (bisa `node preview-xteink.js x3 36 55 78` untuk surah
+pilihan) lalu build ulang.
 
 ---
 
