@@ -4,6 +4,28 @@ Catatan cara menampilkan Al-Qur'an dengan benar di **Xteink X4** (dan tipe
 sekelas: X4 Pro / X4 Classic). Edisi yang dipakai: **Uthmani Arab-only**
 (`dist/Al-Quran/epub/Universal/Al-Quran.epub`, font KFGQPC Uthmanic Hafs).
 
+> ## ⚠️ Firmware **Licorice** (XTOS / "LiCore")? Pakai "EPUB gambar"
+>
+> Licorice **tidak punya mesin shaping Arab** — huruf tidak akan menyambung,
+> font apa pun (termasuk `.bin`/TTF), **dan tidak bisa membuka PDF**. Jadi Cara 1
+> (`.bin`/TTF) dan Cara 2 (PDF) di bawah **tidak berlaku** di Licorice.
+>
+> **Solusi Licorice = EPUB gambar** (`npm run build:x4-licorice`):
+> ```bash
+> npm run build:x4-pdf          # prasyarat (butuh Chrome/Edge)
+> npm run build:x4-image-epub   # -> dist/Al-Quran/epub/Xteink-X4/Al-Quran Xteink X4 (Gambar).epub
+> # atau sekali jalan:
+> npm run build:x4-licorice
+> ```
+> [build-x4-image-epub.js](build-x4-image-epub.js) me-raster tiap halaman PDF X4
+> 480×800 (Arab sudah "dibakar" tersambung + harakat, font LPMQ Kemenag) jadi
+> JPEG grayscale, 1 gambar per halaman EPUB. Terbuka native di Licorice, huruf
+> tersambung, **tanpa font device**. Konsekuensi: **tidak bisa reflow / ubah
+> ukuran font**, file ~110 MB (>100 MB → jangan di-commit ke GitHub).
+>
+> Mau EPUB teks (reflow) + Arab menyambung di device? Harus ganti firmware yang
+> punya shaping Arab: **Midad by Foulad** (Arab-first) atau **PapyriX**.
+
 ## Fakta penting tentang X4
 
 | Hal | Nilai |

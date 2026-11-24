@@ -12,3 +12,6 @@ dist/x3-preview.png
 # assets/fonts/*.ttf
 # assets/cover.jpg
 # assets/divider.png
+
+# Image "Gambar" EPUBs are >100MB (exceed GitHub limit) — build locally, do not commit.
+*(Gambar).epub

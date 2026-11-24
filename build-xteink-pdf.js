@@ -32,7 +32,10 @@ const JSZip = require('jszip');
 
 const ROOT = __dirname;
 const EPUB_PATH = path.join(ROOT, 'dist', 'Al-Quran', 'epub', 'Universal', 'Al-Quran.epub');
-const COVER_PATH = path.join(ROOT, 'assets', 'Gemini_Generated_Image_tzoyi8tzoyi8tzoy.jpg');
+// Line-art "Al-Qur'an al-Kareem" cover (full-bleed, reads well on e-ink). NB:
+// must be an existing asset — a missing COVER_PATH silently falls back to the
+// source EPUB's embedded cover (wrong image).
+const COVER_PATH = path.join(ROOT, 'assets', 'alquran_karim_text_cover.jpg');
 const MM_PER_IN = 25.4;
 
 // Quran font baked into the PDF, overriding the EPUB's embedded @font-face.
@@ -103,19 +106,23 @@ function printCss(dev) {
 html,body{width:${g.widthMm}mm;margin:0!important;padding:0!important;background:#ffffff!important;color:#000000!important;-webkit-print-color-adjust:exact!important;print-color-adjust:exact!important}
 body{box-sizing:border-box;padding:${t.marginMm}mm!important;font-size:${t.arabicPx}px}
 
-/* Cover: one full device screen, then break */
-.cover-wrap{box-sizing:border-box;width:${g.widthMm}mm;height:${g.heightMm}mm;min-height:0;margin:0;padding:0;display:block;overflow:hidden;page-break-after:always;break-after:page;background:#ffffff!important}
+/* Cover: one full device screen, then break. The negative margin cancels the
+   body padding so the cover is full-bleed; WITHOUT it the full-height cover-wrap
+   overflows past the page edge and Chrome prints a BLANK first page. */
+.cover-wrap{box-sizing:border-box;width:${g.widthMm}mm;height:${g.heightMm}mm;min-height:0;margin:-${t.marginMm}mm -${t.marginMm}mm 0;padding:0;display:block;overflow:hidden;page-break-after:always;break-after:page;background:#ffffff!important}
 .cover-wrap img{display:block;width:100%;height:100%;max-width:none;max-height:none;object-fit:fill;object-position:center}
 
 /* CONTINUOUS FLOW: no fixed page box, no forced breaks, no clipping. */
 .page{border:0!important;padding:0!important;margin:0!important;page-break-before:auto!important;break-before:auto!important;overflow:visible!important}
 
-.quran-flow{font-size:1em!important;line-height:${t.arabicLineHeight}!important;text-align:justify;text-align-last:right}
+/* Bolder Arabic for e-ink legibility (faux-bold). Avoid -webkit-text-stroke:
+   it explodes the PDF into per-glyph vector outlines and OOMs the rasteriser. */
+.quran-flow{font-size:1em!important;line-height:${t.arabicLineHeight}!important;text-align:justify;text-align-last:right;font-weight:700!important}
 .surah-banner{margin:.5em 0 .4em!important;padding:.3em .25em!important;border-width:1px!important;break-inside:avoid}
-.surah-name-ar{font-size:${t.surahNameArPx}px!important;line-height:1.3!important}
+.surah-name-ar{font-size:${t.surahNameArPx}px!important;line-height:1.3!important;font-weight:700!important}
 .surah-name-tr{font-size:.72em!important;margin-top:.05em!important}
 .surah-meta{font-size:.6em!important;margin-top:.05em!important}
-.bismillah{font-size:${t.bismillahPx}px!important;margin:.25em 0 .35em!important}
+.bismillah{font-size:${t.bismillahPx}px!important;margin:.25em 0 .35em!important;font-weight:700!important}
 .surah-divider{display:none!important}
 .page-num{font-size:${t.pageNumPx}px!important;margin:.2em 0 .6em!important}
 .ayah-num{font-size:${t.ayahNumEm}em!important;margin:0 .2em!important;padding:0!important;min-width:0!important;border:0!important;background:none!important;border-radius:0!important;color:#000!important;white-space:nowrap!important}
@@ -156,6 +163,27 @@ function extractBody(xhtml, filename) {
   const match = xhtml.match(/<body\b[^>]*>([\s\S]*?)<\/body>/i);
   if (!match) throw new Error(`No body found in ${filename}`);
   return match[1];
+}
+
+const sleep = (ms) => new Promise(r => setTimeout(r, ms));
+
+// Wait until the PDF exists AND is fully written (ends with %%EOF) and its size
+// has stopped growing — guards the chrome.exe launcher-detach race on Windows.
+async function waitForCompletePdf(pdfPath, timeoutMs) {
+  const deadline = Date.now() + timeoutMs;
+  let lastSize = -1;
+  while (Date.now() < deadline) {
+    if (fs.existsSync(pdfPath)) {
+      const size = fs.statSync(pdfPath).size;
+      if (size > 0 && size === lastSize &&
+          fs.readFileSync(pdfPath).subarray(-8).toString('latin1').includes('%%EOF')) {
+        return;
+      }
+      lastSize = size;
+    }
+    await sleep(400);
+  }
+  throw new Error('Chrome finished without creating a complete PDF (timed out waiting).');
 }
 
 function validatePdf(pdfPath, dev) {
@@ -238,7 +266,9 @@ async function buildOne(key) {
     const profileDir = path.join(tempDir, 'chrome-profile');
     if (fs.existsSync(pdfPath)) fs.unlinkSync(pdfPath);
     const result = spawnSync(chrome, [
-      '--headless', '--disable-gpu', '--no-sandbox', '--disable-extensions',
+      // Chrome 132+ removed the legacy headless; --headless=new is required or
+      // Chrome exits 0 without writing the PDF. Edge accepts this form too.
+      '--headless=new', '--disable-gpu', '--no-sandbox', '--disable-extensions',
       '--no-pdf-header-footer',
       `--user-data-dir=${profileDir}`,
       `--print-to-pdf=${pdfPath}`,
@@ -249,7 +279,10 @@ async function buildOne(key) {
     if (result.status !== 0) {
       throw new Error(`PDF rendering failed: ${(result.stderr || result.stdout || '').trim()}`);
     }
-    if (!fs.existsSync(pdfPath)) throw new Error('Chrome finished without creating the PDF.');
+    // On Windows chrome.exe is a thin launcher that relaunches itself detached:
+    // spawnSync returns 0 BEFORE the renderer has flushed the PDF (it appears a
+    // few seconds later). Poll for a complete PDF instead of checking once.
+    await waitForCompletePdf(pdfPath, 120000);
 
     const pages = validatePdf(pdfPath, dev);
     const sizeMb = (fs.statSync(pdfPath).size / (1024 * 1024)).toFixed(2);
