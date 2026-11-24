@@ -2,7 +2,7 @@
 
 Catatan cara menampilkan Al-Qur'an dengan benar di **Xteink X4** (dan tipe
 sekelas: X4 Pro / X4 Classic). Edisi yang dipakai: **Uthmani Arab-only**
-(`dist/Al-Quran.epub`, font KFGQPC Uthmanic Hafs).
+(`dist/Al-Quran/epub/Universal/Al-Quran.epub`, font KFGQPC Uthmanic Hafs).
 
 ## Fakta penting tentang X4
 
@@ -32,10 +32,10 @@ sekelas: X4 Pro / X4 Classic). Edisi yang dipakai: **Uthmani Arab-only**
 Jalankan:
 
 ```bash
-npm run build:x4-epub    # -> dist/Al-Quran Xteink X4.epub  (reflow: cocok X3, X4, X4 Pro)
+npm run build:x4-epub    # -> dist/Al-Quran/epub/Xteink-X4/Al-Quran Xteink X4.epub  (reflow: cocok X3, X4, X4 Pro)
 npm run build:xteink-pdf # -> PDF X4 + X3 sekaligus         (butuh Chrome/Edge)
-npm run build:x4-pdf     # -> dist/Al-Quran Xteink X4.pdf   (X4 / X4 V2 / X4 Pro)
-npm run build:x3-pdf     # -> dist/Al-Quran Xteink X3.pdf   (X3)
+npm run build:x4-pdf     # -> dist/Al-Quran/pdf/Xteink-X4/Al-Quran Xteink X4.pdf   (X4 / X4 V2 / X4 Pro)
+npm run build:x3-pdf     # -> dist/Al-Quran/pdf/Xteink-X3/Al-Quran Xteink X3.pdf   (X3)
 ```
 
 | File | Kapan dipakai | Catatan |

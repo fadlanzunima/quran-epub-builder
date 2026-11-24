@@ -31,7 +31,7 @@ const { pathToFileURL } = require('url');
 const JSZip = require('jszip');
 
 const ROOT = __dirname;
-const EPUB_PATH = path.join(ROOT, 'dist', 'Al-Quran.epub');
+const EPUB_PATH = path.join(ROOT, 'dist', 'Al-Quran', 'epub', 'Universal', 'Al-Quran.epub');
 const COVER_PATH = path.join(ROOT, 'assets', 'Gemini_Generated_Image_tzoyi8tzoyi8tzoy.jpg');
 const MM_PER_IN = 25.4;
 
@@ -53,6 +53,7 @@ const DEVICES = {
   x4: {
     label: 'Xteink X4 / X4 V2 (Classic) / X4 Pro',
     out: 'Al-Quran Xteink X4.pdf',
+    dir: path.join('Al-Quran', 'pdf', 'Xteink-X4'),
     resPx: [480, 800],
     ppi: 220,                 // X4 family: 219–220 PPI
     type: {
@@ -68,6 +69,7 @@ const DEVICES = {
   x3: {
     label: 'Xteink X3',
     out: 'Al-Quran Xteink X3.pdf',
+    dir: path.join('Al-Quran', 'pdf', 'Xteink-X3'),
     resPx: [528, 792],        // best fit for 3.7" @ 259 PPI (not officially published)
     ppi: 259,
     type: {
@@ -183,7 +185,8 @@ async function buildOne(key) {
   if (!dev) throw new Error(`Unknown device "${key}". Use: ${Object.keys(DEVICES).join(', ')}, all.`);
   if (!fs.existsSync(EPUB_PATH)) throw new Error(`EPUB not found: ${EPUB_PATH}`);
   const g = geometry(dev);
-  const pdfPath = path.join(ROOT, 'dist', dev.out);
+  const pdfPath = path.join(ROOT, 'dist', dev.dir, dev.out);
+  fs.mkdirSync(path.dirname(pdfPath), { recursive: true });
 
   const tempDir = fs.mkdtempSync(path.join(os.tmpdir(), `quran-${key}-pdf-`));
   try {

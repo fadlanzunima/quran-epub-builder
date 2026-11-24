@@ -20,8 +20,8 @@ const { DOMParser } = require('@xmldom/xmldom');
 
 const files = process.argv.slice(2);
 const DEFAULTS = [
-  'dist/Al-Quran (Uthmani Format).epub',
-  'dist/Al-Quran (IndoPak Format).epub'
+  'dist/Al-Quran/epub/Universal/Al-Quran (Uthmani Format).epub',
+  'dist/Al-Quran/epub/Universal/Al-Quran (IndoPak Format).epub'
 ];
 
 function parseXml(name, text, errors) {

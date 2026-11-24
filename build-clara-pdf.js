@@ -8,9 +8,9 @@ const { pathToFileURL } = require('url');
 const JSZip = require('jszip');
 
 const ROOT = __dirname;
-const EPUB_PATH = path.join(ROOT, 'dist', 'Al-Quran.epub');
+const EPUB_PATH = path.join(ROOT, 'dist', 'Al-Quran', 'epub', 'Universal', 'Al-Quran.epub');
 const COVER_PATH = path.join(ROOT, 'assets', 'Gemini_Generated_Image_tzoyi8tzoyi8tzoy.jpg');
-const PDF_PATH = path.join(ROOT, 'dist', 'Al-Quran Kobo Clara.pdf');
+const PDF_PATH = path.join(ROOT, 'dist', 'Al-Quran', 'pdf', 'Kobo-Clara', 'Al-Quran Kobo Clara.pdf');
 const CLARA_WIDTH_MM = 90.76;
 const CLARA_HEIGHT_MM = 122.61;
 
@@ -143,6 +143,7 @@ async function main() {
 
     const chrome = findChrome();
     const profileDir = path.join(tempDir, 'chrome-profile');
+    fs.mkdirSync(path.dirname(PDF_PATH), { recursive: true });
     if (fs.existsSync(PDF_PATH)) fs.unlinkSync(PDF_PATH);
     const result = spawnSync(chrome, [
       '--headless',

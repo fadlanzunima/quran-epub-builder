@@ -143,8 +143,8 @@ async function run() {
   );
 
   // zip
-  B.ensureDir(DIST);
-  const outFile = path.join(DIST, 'quran_smoke_preview.epub');
+  const outFile = path.join(DIST, '_test', 'quran_smoke_preview.epub');
+  B.ensureDir(path.dirname(outFile));
   await B.zipEpub(stage, outFile);
 
   const kb = (fs.statSync(outFile).size / 1024).toFixed(1);

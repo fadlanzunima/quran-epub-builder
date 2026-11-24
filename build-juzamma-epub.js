@@ -251,8 +251,8 @@ ${spine.join('\n')}
   oebps.file('toc.ncx', ncxXml(items, `urn:uuid:${uid}`));
   oebps.file('content.opf', contentOpf(items, font, hasCover, hasDivider, uid));
 
-  ensureDir(DIST);
-  const out = path.join(DIST, `${BOOK_TITLE}.epub`);
+  const out = path.join(DIST, 'Juz Amma', 'epub', 'Universal', `${BOOK_TITLE}.epub`);
+  ensureDir(path.dirname(out));
   const buf = await zip.generateAsync({ type: 'nodebuffer', mimeType: 'application/epub+zip', compression: 'DEFLATE', compressionOptions: { level: 9 } });
   fs.writeFileSync(out, buf);
   console.log(`wrote ${path.relative(ROOT, out)} (${(buf.length / 1024 / 1024).toFixed(2)} MB, ${items.length} surah)`);

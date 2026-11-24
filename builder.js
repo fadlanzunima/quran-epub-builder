@@ -733,9 +733,9 @@ async function buildEdition(ed, shared) {
   const modified = '2026-10-16T00:00:00Z';
   oebps.file('content.opf', contentOpf(ed, contentFiles, font, hasCoverImage, imageList, uid, modified));
 
-  // Write .epub
-  ensureDir(DIST);
-  const out = path.join(DIST, ed.filename);
+  // Write .epub (grouped: name -> format -> device)
+  const out = path.join(DIST, 'Al-Quran', 'epub', 'Universal', ed.filename);
+  ensureDir(path.dirname(out));
   const buf = await zip.generateAsync({
     type: 'nodebuffer',
     mimeType: 'application/epub+zip',

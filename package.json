@@ -17,7 +17,7 @@
     "preview:x4": "node preview-xteink.js x4",
     "preview:x3": "node preview-xteink.js x3",
     "validate": "node validate.js",
-    "check": "epubcheck \"dist/Al-Quran (Uthmani Format).epub\" && epubcheck \"dist/Al-Quran (IndoPak Format).epub\""
+    "check": "epubcheck \"dist/Al-Quran/epub/Universal/Al-Quran (Uthmani Format).epub\" && epubcheck \"dist/Al-Quran/epub/Universal/Al-Quran (IndoPak Format).epub\""
   },
   "author": "",
   "license": "MIT",

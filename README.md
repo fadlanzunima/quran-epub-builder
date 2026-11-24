@@ -32,7 +32,7 @@ npm run build:clara-pdf           # create a full-page PDF for Kobo Clara
 
 `npm run build:clara-pdf` uses the Kobo Clara page size and
 `assets/Gemini_Generated_Image_tzoyi8tzoyi8tzoy.jpg` as a full-page cover. It
-requires Chrome or Microsoft Edge and writes `dist/Al-Quran Kobo Clara.pdf`.
+requires Chrome or Microsoft Edge and writes `dist/Al-Quran/pdf/Kobo-Clara/Al-Quran Kobo Clara.pdf`.
 
 Output:
 

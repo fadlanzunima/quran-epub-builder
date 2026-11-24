@@ -22,8 +22,8 @@ const path = require('path');
 const JSZip = require('jszip');
 
 const ROOT = __dirname;
-const SRC_EPUB = path.join(ROOT, 'dist', 'Al-Quran.epub');
-const OUT_EPUB = path.join(ROOT, 'dist', 'Al-Quran Xteink X4.epub');
+const SRC_EPUB = path.join(ROOT, 'dist', 'Al-Quran', 'epub', 'Universal', 'Al-Quran.epub');
+const OUT_EPUB = path.join(ROOT, 'dist', 'Al-Quran', 'epub', 'Xteink-X4', 'Al-Quran Xteink X4.epub');
 
 // Lightweight CSS tuned for the X4 (480x800). Decoration kept minimal so the
 // ESP32 reader lays out fast and the small screen stays uncluttered. The
@@ -114,6 +114,7 @@ async function main() {
     compression: 'DEFLATE',
     compressionOptions: { level: 9 },
   });
+  fs.mkdirSync(path.dirname(OUT_EPUB), { recursive: true });
   fs.writeFileSync(OUT_EPUB, buf);
 
   const sizeMb = (buf.length / (1024 * 1024)).toFixed(2);

@@ -23,7 +23,7 @@ const JSZip = require('jszip');
 const { DEVICES, geometry, printCss, QURAN_FONT } = require('./build-xteink-pdf.js');
 
 const ROOT = __dirname;
-const EPUB_PATH = path.join(ROOT, 'dist', 'Al-Quran.epub');
+const EPUB_PATH = path.join(ROOT, 'dist', 'Al-Quran', 'epub', 'Universal', 'Al-Quran.epub');
 const MM_PER_IN = 25.4;
 
 function parseArgs(argv) {
