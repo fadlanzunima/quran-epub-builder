@@ -10,6 +10,7 @@
     "build:indopak": "node builder.js --only=indopak",
     "build:clara-pdf": "node build-clara-pdf.js",
     "build:x4-epub": "node build-x4-epub.js",
+    "build:x4-kemenag": "node build-x4-kemenag-epub.js",
     "build:x4-pdf": "node build-xteink-pdf.js x4",
     "build:x3-pdf": "node build-xteink-pdf.js x3",
     "build:xteink-pdf": "node build-xteink-pdf.js all",
