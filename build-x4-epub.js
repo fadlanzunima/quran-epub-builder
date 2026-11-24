@@ -24,6 +24,8 @@ const JSZip = require('jszip');
 const ROOT = __dirname;
 const SRC_EPUB = path.join(ROOT, 'dist', 'Al-Quran.epub');
 const OUT_EPUB = path.join(ROOT, 'dist', 'Al-Quran Xteink X4.epub');
+// Dedicated cover for the Xteink build (ornate line-art, reads well on e-ink).
+const X4_COVER = path.join(ROOT, 'assets', 'Gemini_Generated_Image_tzoyi8tzoyi8tzoy.jpg');
 
 // Lightweight CSS tuned for the X4 (480x800). Decoration kept minimal so the
 // ESP32 reader lays out fast and the small screen stays uncluttered. The
@@ -72,6 +74,10 @@ async function main() {
   const srcBuf = fs.readFileSync(SRC_EPUB);
   const src = await JSZip.loadAsync(srcBuf);
 
+  // Load the dedicated Xteink cover (swapped in for images/cover.jpg below).
+  if (!fs.existsSync(X4_COVER)) throw new Error(`Xteink cover not found: ${X4_COVER}`);
+  const coverBuf = fs.readFileSync(X4_COVER);
+
   // Pull the @font-face rule out of the original CSS so the embedded font stays
   // wired up (readers that honour it keep the Uthmani face).
   const cssEntry = Object.keys(src.files).find(n => /css\/style\.css$/.test(n));
@@ -90,6 +96,10 @@ async function main() {
     if (entry.dir) continue;
     if (name === cssEntry) {
       out.file(name, x4Css(fontFaceRule));
+    } else if (/\/images\/cover\.jpg$/.test(name)) {
+      // Swap in the dedicated Xteink cover (same path + JPEG, so the OPF
+      // cover-image manifest entry and media-type stay valid).
+      out.file(name, coverBuf);
     } else if (/\/images\/divider\.png$/.test(name)) {
       // Drop the divider image from the X4 build (references stripped below).
       continue;

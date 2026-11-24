@@ -91,6 +91,29 @@ const EDITIONS = {
       file: 'ScheherazadeNew-Regular.ttf',
       url: 'https://github.com/google/fonts/raw/main/ofl/scheherazadenew/ScheherazadeNew-Regular.ttf'
     }
+  },
+  kemenag: {
+    id: 'kemenag',
+    filename: 'Al-Quran (Kemenag Format).epub',
+    bookTitle: 'القرآن الكريم',
+    bookSubtitle: 'Mushaf Standar Kemenag (Imlaʼi)',
+    language: 'ar',
+    pageDir: 'rtl',
+    bilingual: false,
+    // Imla'i orthography = the Indonesian/Kemenag standard (plain alif, no
+    // alif-wasla), paired with the LPMQ Isep Misbah font. Also renders
+    // hamza-below cleaner than KFGQPC Uthmanic Hafs.
+    arabicField: 'text_imlaei',
+    translationId: null,
+    chapterLang: 'en',
+    fontCandidates: [
+      'LPMQ-IsepMisbah.ttf', 'LPMQIsepMisbah.ttf', 'LPMQ.ttf',
+      'ScheherazadeNew-Regular.ttf', 'ScheherazadeNew.ttf'
+    ],
+    fontAutoDownload: {
+      file: 'ScheherazadeNew-Regular.ttf',
+      url: 'https://github.com/google/fonts/raw/main/ofl/scheherazadenew/ScheherazadeNew-Regular.ttf'
+    }
   }
 };
 

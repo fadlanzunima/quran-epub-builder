@@ -23,9 +23,15 @@ const { pathToFileURL } = require('url');
 const JSZip = require('jszip');
 
 const ROOT = __dirname;
-const EPUB_PATH = path.join(ROOT, 'dist', 'Al-Quran.epub');
+// Source EPUB and output PDF are overridable so the same layout can render a
+// different edition (e.g. Kemenag). Defaults keep the original Uthmani build.
+const EPUB_PATH = process.env.X4_SRC_EPUB
+  ? path.resolve(ROOT, process.env.X4_SRC_EPUB)
+  : path.join(ROOT, 'dist', 'Al-Quran.epub');
 const COVER_PATH = path.join(ROOT, 'assets', 'Gemini_Generated_Image_tzoyi8tzoyi8tzoy.jpg');
-const PDF_PATH = path.join(ROOT, 'dist', 'Al-Quran Xteink X4.pdf');
+const PDF_PATH = process.env.X4_OUT_PDF
+  ? path.resolve(ROOT, process.env.X4_OUT_PDF)
+  : path.join(ROOT, 'dist', 'Al-Quran Xteink X4.pdf');
 
 // --- Xteink X4 screen geometry: 480 x 800 px @ 220 PPI -----------------------
 const X4_PPI = 220;
@@ -51,23 +57,30 @@ const PRINT_CSS = `
 html,body{width:${X4_WIDTH_MM}mm;margin:0!important;padding:0!important;background:#ffffff!important;color:#000000!important;-webkit-print-color-adjust:exact!important;print-color-adjust:exact!important}
 body{box-sizing:border-box;padding:${X4.marginMm}mm!important;font-size:${X4.arabicPx}px}
 
-/* Cover: one full X4 screen, then break */
-.cover-wrap{box-sizing:border-box;width:${X4_WIDTH_MM}mm;height:${X4_HEIGHT_MM}mm;min-height:0;margin:0;padding:0;display:block;overflow:hidden;page-break-after:always;break-after:page;background:#ffffff!important}
+/* Cover: one full X4 screen, then break. The negative margin cancels the body
+   padding so the cover is full-bleed; WITHOUT it the full-height cover-wrap
+   overflows past the page edge and Chrome prints a BLANK first page. */
+.cover-wrap{box-sizing:border-box;width:${X4_WIDTH_MM}mm;height:${X4_HEIGHT_MM}mm;min-height:0;margin:-${X4.marginMm}mm -${X4.marginMm}mm 0;padding:0;display:block;overflow:hidden;page-break-after:always;break-after:page;background:#ffffff!important}
 .cover-wrap img{display:block;width:100%;height:100%;max-width:none;max-height:none;object-fit:fill;object-position:center}
 
 /* CONTINUOUS FLOW: no fixed page box, no forced breaks, no clipping.
    Let the content paginate naturally across X4-sized sheets. */
 .page{border:0!important;padding:0!important;margin:0!important;page-break-before:auto!important;break-before:auto!important;overflow:visible!important}
 
-.quran-flow{font-size:1em!important;line-height:${X4.arabicLineHeight}!important;text-align:justify;text-align-last:right}
+/* Bolder Arabic for e-ink legibility via faux-bold (font-weight:700). NB: avoid
+   -webkit-text-stroke here — it balloons the PDF into per-glyph vector outlines
+   and OOMs the rasteriser. */
+.quran-flow{font-size:1em!important;line-height:${X4.arabicLineHeight}!important;text-align:justify;text-align-last:right;font-weight:700!important}
 .surah-banner{margin:.5em 0 .4em!important;padding:.3em .25em!important;border-width:1px!important;break-inside:avoid}
-.surah-name-ar{font-size:${X4.surahNameArPx}px!important;line-height:1.3!important}
+.surah-name-ar{font-size:${X4.surahNameArPx}px!important;line-height:1.3!important;font-weight:700!important}
 .surah-name-tr{font-size:.72em!important;margin-top:.05em!important}
 .surah-meta{font-size:.6em!important;margin-top:.05em!important}
-.bismillah{font-size:${X4.bismillahPx}px!important;margin:.25em 0 .35em!important}
+.bismillah{font-size:${X4.bismillahPx}px!important;margin:.25em 0 .35em!important;font-weight:700!important}
 .surah-divider{display:none!important}
 .page-num{font-size:${X4.pageNumPx}px!important;margin:.2em 0 .6em!important}
-.ayah-num{font-size:${X4.ayahNumEm}em!important;margin:0 .15em!important;padding:.02em .22em!important}
+/* Ayah marker: drop the decorative cream/green motif; plain SOLID BLACK ring
+   with a black bold number — high contrast on e-ink. */
+.ayah-num{font-size:${X4.ayahNumEm}em!important;margin:0 .15em!important;padding:.02em .22em!important;background:#fff!important;border:1.6px solid #000!important;border-color:#000!important;color:#000!important;font-weight:700!important}
 `;
 
 function findChrome() {
@@ -109,6 +122,30 @@ function extractBody(xhtml, filename) {
   const match = xhtml.match(/<body\b[^>]*>([\s\S]*?)<\/body>/i);
   if (!match) throw new Error(`No body found in ${filename}`);
   return match[1];
+}
+
+function sleep(ms) {
+  return new Promise(resolve => setTimeout(resolve, ms));
+}
+
+// Wait until the PDF exists AND is fully written (ends with %%EOF) and its size
+// has stopped growing. Guards against the chrome.exe launcher-detach race on
+// Windows where spawnSync returns before the renderer has flushed the file.
+async function waitForCompletePdf(pdfPath, timeoutMs) {
+  const deadline = Date.now() + timeoutMs;
+  let lastSize = -1;
+  while (Date.now() < deadline) {
+    if (fs.existsSync(pdfPath)) {
+      const size = fs.statSync(pdfPath).size;
+      if (size > 0 && size === lastSize) {
+        const tail = fs.readFileSync(pdfPath).subarray(-8).toString('latin1');
+        if (tail.includes('%%EOF')) return;
+      }
+      lastSize = size;
+    }
+    await sleep(400);
+  }
+  throw new Error('Chrome finished without creating a complete PDF (timed out waiting).');
 }
 
 function validatePdf(pdfPath) {
@@ -185,7 +222,9 @@ async function main() {
     const profileDir = path.join(tempDir, 'chrome-profile');
     if (fs.existsSync(PDF_PATH)) fs.unlinkSync(PDF_PATH);
     const result = spawnSync(chrome, [
-      '--headless',
+      // Chrome 132+ removed the legacy headless; --headless=new is required or
+      // Chrome exits 0 without writing the PDF. Edge still accepts this form.
+      '--headless=new',
       '--disable-gpu',
       '--no-sandbox',
       '--disable-extensions',
@@ -199,7 +238,11 @@ async function main() {
     if (result.status !== 0) {
       throw new Error(`PDF rendering failed: ${(result.stderr || result.stdout || '').trim()}`);
     }
-    if (!fs.existsSync(PDF_PATH)) throw new Error('Chrome finished without creating the PDF.');
+    // On Windows, chrome.exe is a thin launcher that relaunches itself as a
+    // detached child: spawnSync returns 0 *before* the real renderer finishes
+    // writing the PDF (the file shows up a few seconds later). Poll for a
+    // complete PDF (ends with %%EOF) instead of checking once immediately.
+    await waitForCompletePdf(PDF_PATH, 120000);
 
     const pages = validatePdf(PDF_PATH);
     const sizeMb = (fs.statSync(PDF_PATH).size / (1024 * 1024)).toFixed(2);
