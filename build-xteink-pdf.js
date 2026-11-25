@@ -46,6 +46,17 @@ const QURAN_FONT = {
   fmt: 'truetype',
 };
 
+// Page numbers run to 604 (3 digits). LPMQ only has its ayah-end ornament glyph
+// for numbers up to ~286, so bigger page numbers split into two ornaments; and
+// its plain digits are tiny with a near-invisible zero-dot. Scheherazade New
+// renders clear, well-sized Arabic-Indic digits (no ornament), so we bake it
+// just for the page number.
+const PAGENUM_FONT = {
+  file: 'ScheherazadeNew-Regular.ttf',
+  src: path.join(ROOT, 'assets', 'fonts', 'ScheherazadeNew-Regular.ttf'),
+  fmt: 'truetype',
+};
+
 // --- Device profiles ---------------------------------------------------------
 // resPx: [width, height] in portrait. ppi: panel density. type: CSS sizes tuned
 // so Arabic stays comfortable at that physical screen size.
@@ -63,7 +74,7 @@ const DEVICES = {
       surahNameArPx: 23,
       bismillahPx: 18,
       ayahNumEm: 0.9,
-      pageNumPx: 9,
+      pageNumPx: 16,
     },
   },
   x3: {
@@ -79,7 +90,7 @@ const DEVICES = {
       surahNameArPx: 21,
       bismillahPx: 16.5,
       ayahNumEm: 0.9,
-      pageNumPx: 8.5,
+      pageNumPx: 15,
     },
   },
 };
@@ -99,18 +110,25 @@ function printCss(dev) {
   const t = dev.type;
   return `
 @font-face{font-family:'QuranArabic';font-style:normal;font-weight:400;src:url('fonts/${QURAN_FONT.file}') format('${QURAN_FONT.fmt}');}
+@font-face{font-family:'PageNumFont';font-style:normal;font-weight:400;src:url('fonts/${PAGENUM_FONT.file}') format('${PAGENUM_FONT.fmt}');}
 @page{size:${g.widthMm}mm ${g.heightMm}mm;margin:0}
 html,body{width:${g.widthMm}mm;margin:0!important;padding:0!important;background:#ffffff!important;color:#000000!important;-webkit-print-color-adjust:exact!important;print-color-adjust:exact!important}
 body{box-sizing:border-box;padding:${t.marginMm}mm!important;font-size:${t.arabicPx}px}
 
-/* Cover: one full device screen, then break */
-.cover-wrap{box-sizing:border-box;width:${g.widthMm}mm;height:${g.heightMm}mm;min-height:0;margin:0;padding:0;display:block;overflow:hidden;page-break-after:always;break-after:page;background:#ffffff!important}
+/* Cover: one full device screen, then break. Negative margins cancel the body
+   padding so the image is full-bleed AND still fits exactly one page — otherwise
+   the body padding pushes the full-height cover onto a 2nd sheet (blank page 1). */
+.cover-wrap{box-sizing:border-box;width:${g.widthMm}mm;height:${g.heightMm}mm;min-height:0;margin:-${t.marginMm}mm -${t.marginMm}mm 0;padding:0;display:block;overflow:hidden;page-break-after:always;break-after:page;background:#ffffff!important}
 .cover-wrap img{display:block;width:100%;height:100%;max-width:none;max-height:none;object-fit:fill;object-position:center}
 
 /* CONTINUOUS FLOW: no fixed page box, no forced breaks, no clipping. */
 .page{border:0!important;padding:0!important;margin:0!important;page-break-before:auto!important;break-before:auto!important;overflow:visible!important}
 
-.quran-flow{font-size:1em!important;line-height:${t.arabicLineHeight}!important;text-align:justify;text-align-last:right;font-weight:bold}
+/* text-align:right (NOT justify). Chrome justifies Arabic with kashida — it
+   stretches the cursive joins between letters, which at this small font size
+   SNAPS the join (e.g. بِهِمْ renders as "بِ هِمْ"). Right-align keeps every
+   join intact and also removes the over-wide inter-word gaps justify produced. */
+.quran-flow{font-size:1em!important;line-height:${t.arabicLineHeight}!important;text-align:right!important;font-weight:bold}
 .surah-name-ar,.bismillah,.ayah-num{font-weight:bold}
 .surah-banner{margin:.5em 0 .4em!important;padding:.3em .25em!important;border-width:1px!important;break-inside:avoid}
 .surah-name-ar{font-size:${t.surahNameArPx}px!important;line-height:1.3!important}
@@ -118,7 +136,12 @@ body{box-sizing:border-box;padding:${t.marginMm}mm!important;font-size:${t.arabi
 .surah-meta{font-size:.6em!important;margin-top:.05em!important}
 .bismillah{font-size:${t.bismillahPx}px!important;margin:.25em 0 .35em!important}
 .surah-divider{display:none!important}
-.page-num{font-size:${t.pageNumPx}px!important;margin:.2em 0 .6em!important}
+/* Plain digits, NOT the font's ayah-end ornament. LPMQ only has the ornament
+   ligature for numbers up to ~286 (max ayah count); page numbers run to 604, so
+   e.g. ٦٠٤ splits into TWO ornaments (٦٠ + ٤). Disabling the ligatures renders
+   the page number as plain digits in a single slot. Bigger px compensates for
+   the ornament's lost size. */
+.page-num{font-family:'PageNumFont',serif!important;font-size:${t.pageNumPx}px!important;margin:.2em 0 .6em!important;color:#000!important;font-weight:bold!important}
 .ayah-num{font-size:${t.ayahNumEm}em!important;margin:0 .2em!important;padding:0!important;min-width:0!important;border:0!important;background:none!important;border-radius:0!important;color:#000!important;white-space:nowrap!important}
 `;
 }
@@ -153,10 +176,56 @@ function safeOebpsPath(oebpsDir, entryName) {
   return fullPath;
 }
 
+// Drop the literal spaces hugging each ayah-number span. With text-align:justify
+// those U+0020 spaces STRETCH like any inter-word gap, so the number floats far
+// from its verse. Removing them lets the .ayah-num CSS margin (fixed, .Nem) set a
+// tight, non-stretching gap instead. Pattern baked by builder.js is:
+//   <text> <span class="ayah-num">N</span> </span>
+function tightenAyahNumbers(html) {
+  return html
+    .replace(/ (<span class="ayah-num">)/g, '$1')              // space BEFORE the number
+    .replace(/(<span class="ayah-num">[^<]*<\/span>) /g, '$1'); // space AFTER the number
+}
+
+const esc = (s) => String(s)
+  .replace(/&/g, '&amp;').replace(/</g, '&lt;').replace(/>/g, '&gt;')
+  .replace(/"/g, '&quot;').replace(/'/g, '&#39;');
+
+// Decode the handful of HTML entities that appear in <title> (e.g. "Ali &#39;Imran")
+// so the PDF bookmark — which is plain text, not markup — shows a real apostrophe.
+const decodeEntities = (s) => String(s)
+  .replace(/&#(\d+);/g, (_, n) => String.fromCodePoint(+n))
+  .replace(/&#x([0-9a-f]+);/gi, (_, h) => String.fromCodePoint(parseInt(h, 16)))
+  .replace(/&quot;/g, '"').replace(/&apos;/g, "'")
+  .replace(/&lt;/g, '<').replace(/&gt;/g, '>').replace(/&amp;/g, '&');
+
+// Add a PDF outline (bookmarks) via add-pdf-outline.py (PyMuPDF). Chrome's
+// print-to-pdf emits named destinations for our #pdfnav-N anchors but no
+// document outline; the official Xteink converter builds the .xtcz chapter list
+// from the outline. Flat list (one level-1 bookmark per surah). Non-fatal.
+function addPdfOutline(pdfPath, items, tempDir) {
+  if (!items.length) return true;
+  const jsonPath = path.join(tempDir, 'outline.json');
+  const flat = items.map(it => ({ level: 1, title: it.title, name: it.name }));
+  fs.writeFileSync(jsonPath, JSON.stringify(flat), 'utf8');
+  const script = path.join(ROOT, 'add-pdf-outline.py');
+  let lastErr = '';
+  for (const py of [process.env.PYTHON, 'python', 'py'].filter(Boolean)) {
+    const r = spawnSync(py, [script, pdfPath, jsonPath], { encoding: 'utf8' });
+    if (!r.error && r.status === 0) {
+      console.log(`  + outline: ${(r.stdout || '').trim() || `${flat.length} bookmarks`}`);
+      return true;
+    }
+    lastErr = (r.error && r.error.message) || r.stderr || r.stdout || '';
+  }
+  console.warn(`  ! outline skipped (need Python + PyMuPDF): ${lastErr.trim().split('\n').pop()}`);
+  return false;
+}
+
 function extractBody(xhtml, filename) {
   const match = xhtml.match(/<body\b[^>]*>([\s\S]*?)<\/body>/i);
   if (!match) throw new Error(`No body found in ${filename}`);
-  return match[1];
+  return tightenAyahNumbers(match[1]);
 }
 
 function validatePdf(pdfPath, dev) {
@@ -204,8 +273,10 @@ async function buildOne(key) {
 
     // Bake the chosen Quran font in (printCss re-points 'QuranArabic' to it).
     if (!fs.existsSync(QURAN_FONT.src)) throw new Error(`Quran font not found: ${QURAN_FONT.src}`);
+    if (!fs.existsSync(PAGENUM_FONT.src)) throw new Error(`Page-number font not found: ${PAGENUM_FONT.src}`);
     fs.mkdirSync(path.join(oebpsDir, 'fonts'), { recursive: true });
     fs.copyFileSync(QURAN_FONT.src, path.join(oebpsDir, 'fonts', QURAN_FONT.file));
+    fs.copyFileSync(PAGENUM_FONT.src, path.join(oebpsDir, 'fonts', PAGENUM_FONT.file));
 
     const textDir = path.join(oebpsDir, 'text');
     const surahs = fs.readdirSync(textDir)
@@ -223,15 +294,28 @@ async function buildOne(key) {
       coverBody = '<section epub:type="cover" class="cover-wrap"><img src="images/cover.jpg" alt="Al-Qur’an al-Karim"/></section>';
     }
 
-    const pageBodies = surahs.map(f =>
-      extractBody(fs.readFileSync(path.join(textDir, f), 'utf8'), f));
+    // One wrapped section per surah with a stable id, plus its bookmark title.
+    // The hidden <nav> links make Chrome emit a named destination per id; the
+    // official Xteink converter builds the .xtcz chapter list from the outline
+    // we attach afterwards (Chrome's print-to-pdf emits no outline itself).
+    const outlineItems = [];
+    const pageBodies = surahs.map(f => {
+      const xhtml = fs.readFileSync(path.join(textDir, f), 'utf8');
+      const num = parseInt(f.match(/surah-(\d{3})\.xhtml$/)[1], 10);
+      const title = decodeEntities(((xhtml.match(/<title>([\s\S]*?)<\/title>/i) || [])[1] || `Surah ${num}`).trim());
+      const anchor = `pdfnav-${num}`;
+      outlineItems.push({ name: anchor, title });
+      return `<section id="${anchor}">${extractBody(xhtml, f)}</section>`;
+    });
+    const navLinks = `<nav style="display:none">${
+      outlineItems.map(it => `<a href="#${it.name}">${esc(it.title)}</a>`).join('')}</nav>`;
 
     const printable = `<!doctype html>
 <html xmlns="http://www.w3.org/1999/xhtml" xmlns:epub="http://www.idpf.org/2007/ops" lang="ar" dir="rtl">
 <head><meta charset="utf-8"/><meta name="viewport" content="width=device-width, initial-scale=1"/>
 <title>Al-Qur’an al-Karim — ${dev.label}</title><link rel="stylesheet" href="css/style.css"/>
 <style>${printCss(dev)}</style></head>
-<body>${coverBody}${pageBodies.join('')}</body></html>`;
+<body>${coverBody}${navLinks}${pageBodies.join('')}</body></html>`;
     const printHtml = path.join(oebpsDir, 'print.html');
     fs.writeFileSync(printHtml, printable, 'utf8');
 
@@ -253,6 +337,11 @@ async function buildOne(key) {
     if (!fs.existsSync(pdfPath)) throw new Error('Chrome finished without creating the PDF.');
 
     const pages = validatePdf(pdfPath, dev);
+
+    // Attach a flat 114-surah outline so the official converter can build the
+    // .xtcz chapter list (without it the chapter list is empty).
+    addPdfOutline(pdfPath, outlineItems, tempDir);
+
     const sizeMb = (fs.statSync(pdfPath).size / (1024 * 1024)).toFixed(2);
     console.log(`✓ ${dev.out} — ${pages} sheets, ${sizeMb} MB · ` +
       `${g.widthMm.toFixed(2)}x${g.heightMm.toFixed(2)} mm = ${g.wpx}x${g.hpx} px @ ${g.ppi} PPI`);

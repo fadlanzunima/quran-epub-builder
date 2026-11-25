@@ -122,7 +122,10 @@ const normalizeArabic = (s) => String(s)
   .replace(/ٮ/g, 'ى')         // dotless beh -> alef maqsura (ى)
   .replace(/یء/g, 'ئ')        // farsi yeh + hamza -> yeh-hamza (ئ)
   .replace(/ی/g, 'ي')         // farsi yeh -> yeh (ي)
-  .replace(/ڪ/g, 'ك')         // swash kaf -> kaf (ك)
+  .replace(/ڪ/g, 'ك')         // swash kaf (U+06AA) -> kaf (ك)
+  .replace(/ک/g, 'ك')         // keheh (U+06A9, Urdu/Farsi kaf) -> kaf (ك); IndoPak mixes it in (e.g. كنتم), LPMQ lacks it so it falls back to a system font and breaks the join ("putus")
+  .replace(/[ھہ]/g, 'ه')      // heh doachashmee (U+06BE) / heh goal (U+06C1) -> heh (ه)
+  .replace(/ے/g, 'ى')         // yeh barree (U+06D2) -> alef maqsura (ى)
   .replace(/ۡ/g, 'ْ')  // IndoPak jazm (U+06E1) -> standard sukun (U+0652); LPMQ renders U+06E1 nearly invisibly
   .replace(/[-]/g, '')  // strip IndoPak Private-Use pause/ayah-end glyphs (tofu)
   // --- Uthmani edition (text_uthmani) only; no-ops on IndoPak text ---

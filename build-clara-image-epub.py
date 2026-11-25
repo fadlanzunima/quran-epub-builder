@@ -22,15 +22,16 @@ from PIL import Image
 
 def esc(s): return html.escape(str(s), quote=True)
 
-def build(src_pdf, out_path, title, limit=0):
+def build(src_pdf, out_path, title, limit=0, width=1072, colors=16):
     doc = fitz.open(src_pdf)
     n = len(doc)
     if limit and limit < n:
         n = limit
-    # Clara Colour panel ~1072x1448 @ 300ppi. Scale each page to ~1072 wide.
+    # Clara Colour panel ~1072 wide. Lower `width`/`colors` to shrink the file
+    # (fewer colours collapses the cream/green to high-contrast black on white).
     page0 = doc[0]
     pw, ph = page0.rect.width, page0.rect.height
-    zoom = 1072.0 / pw
+    zoom = float(width) / pw
     IMG_W, IMG_H = round(pw * zoom), round(ph * zoom)
 
     # The pages are flat art (cream ground + dark-green text), so a 16-colour
@@ -40,7 +41,7 @@ def build(src_pdf, out_path, title, limit=0):
         pix = doc[i].get_pixmap(matrix=fitz.Matrix(zoom, zoom), alpha=False)
         img = Image.frombytes("RGB", (pix.width, pix.height), pix.samples)
         buf = io.BytesIO()
-        img.convert("P", palette=Image.ADAPTIVE, colors=16).save(buf, "PNG", optimize=True)
+        img.convert("P", palette=Image.ADAPTIVE, colors=colors).save(buf, "PNG", optimize=True)
         pages.append((f"page-{i+1:04d}.png", buf.getvalue()))
 
     MOD = "2026-11-25T00:00:00Z"
@@ -155,4 +156,6 @@ def build(src_pdf, out_path, title, limit=0):
 if __name__ == "__main__":
     src, out, title = sys.argv[1], sys.argv[2], sys.argv[3]
     limit = int(sys.argv[4]) if len(sys.argv) > 4 else 0
-    build(src, out, title, limit)
+    width = int(sys.argv[5]) if len(sys.argv) > 5 else 1072
+    colors = int(sys.argv[6]) if len(sys.argv) > 6 else 16
+    build(src, out, title, limit, width, colors)
