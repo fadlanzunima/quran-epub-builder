@@ -90,10 +90,12 @@ body{
      holds up to 3 digits). No CSS pill/border/background behind it. */
   font-family:'QuranArabic',"Scheherazade New",serif;
   display:inline-block;
-  margin:0 .06em;               /* sit close to the verse text, not floating far */
+  margin:0 .03em;               /* sit snug against the verse text */
   font-size:.9em;
   line-height:1.2;
   vertical-align:middle;
+  position:relative;
+  top:-.15em;                   /* lift the marker slightly up the line */
   white-space:nowrap;           /* never split a multi-digit ayah number across lines */
   color:var(--ink);
 }

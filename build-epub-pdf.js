@@ -131,7 +131,10 @@ nav[role="doc-toc"] li{margin:.15em 0}`
     // an otherwise-blank page. Flow the verses continuously instead (no boxes,
     // no forced breaks) so every PDF page fills and none are left number-only.
     extraCss: `.page{border:0!important;padding:0!important;margin:0 0 .15em!important;page-break-before:auto!important;break-before:auto!important;break-inside:auto!important}
-.page-num{display:none!important}`,
+.page-num{display:none!important}
+nav[role="doc-toc"] ol{list-style:none;padding:0;margin:.3em 0}
+nav[role="doc-toc"] ol ol{padding-inline-start:1.4em}
+nav[role="doc-toc"] li{margin:.15em 0}`,
   }
 };
 
