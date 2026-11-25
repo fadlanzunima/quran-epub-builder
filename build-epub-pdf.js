@@ -125,6 +125,13 @@ nav[role="doc-toc"] li{margin:.15em 0}`
     },
     // One "al-Qur'an" group → all 114 surahs, so the .xtcz chapter list fills.
     outlineGroups: [{ title: 'Al-Qur’an al-Karim', match: /surah-\d+\.xhtml$/ }],
+    // The EPUB frames each mushaf page in a bordered `.page` box with a forced
+    // page break before it. On the small X4 sheet a mushaf page is taller than
+    // one PDF page, so the box split and its trailing `.page-num` orphaned onto
+    // an otherwise-blank page. Flow the verses continuously instead (no boxes,
+    // no forced breaks) so every PDF page fills and none are left number-only.
+    extraCss: `.page{border:0!important;padding:0!important;margin:0 0 .15em!important;page-break-before:auto!important;break-before:auto!important;break-inside:auto!important}
+.page-num{display:none!important}`,
   }
 };
 
