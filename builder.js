@@ -105,6 +105,27 @@ const toArabicNumerals = (num) =>
 const pad3 = (n) => String(n).padStart(3, '0');
 const sleep = (ms) => new Promise(r => setTimeout(r, ms));
 
+/**
+ * Re-encode the Uthmani long-vowel pronoun marks to the Kemenag notation.
+ * The Uthmani text (text_uthmani) spells the "hū"/"hī" silah with a damma/kasra
+ * PLUS a superscript small waw (U+06E5) or small yaa (U+06E6). The Quran font we
+ * bake (LPMQ Isep Misbah) is the Kemenag Mushaf Standar font: it expects the
+ * single-mark Kemenag forms — inverted damma (U+0657) and subscript alef
+ * (U+0656) — so the two-mark Uthmani form stacks and reads as a *doubled* damma.
+ * This maps them to the Kemenag marks (identical rasm, same as the Juz 'Amma
+ * book). No-op on text without the small letters (e.g. the IndoPak edition).
+ */
+const normalizeArabic = (s) => String(s)
+  .replace(/ُۥ/g, 'ٗ')         // damma + small waw -> inverted damma  (hū)
+  .replace(/ِۦ/g, 'ٖ')         // kasra + small yaa -> subscript alef   (hī)
+  .replace(/ۥ/g, 'ٗ')               // any stray small waw -> inverted damma
+  .replace(/ۦ/g, 'ٖ')               // any stray small yaa -> subscript alef
+  // The Uthmani text seats the dagger alef (U+0670) on a tatweel kashida after
+  // connecting letters (مَـٰن) but not after non-joining ones (ذَٰلِكَ, صِرَٰط), so the
+  // standing alef looks inconsistent. Drop the kashida so every dagger alef sits
+  // directly on its letter — uniform, and identical to the Juz 'Amma (IndoPak) book.
+  .replace(/ـٰ/g, 'ٰ');  // tatweel + dagger alef -> dagger alef
+
 /** Minimal XML/HTML escape for text nodes and attributes. */
 const esc = (s) => String(s)
   .replace(/&/g, '&amp;').replace(/</g, '&lt;').replace(/>/g, '&gt;')
@@ -420,7 +441,7 @@ function surahXhtmlArabic(ed, ch, verses, opts) {
   }
   const sections = groups.map((g, idx) => {
     const flow = g.items.map(v => {
-      const t = (v[ed.arabicField] || '').trim();
+      const t = normalizeArabic((v[ed.arabicField] || '').trim());
       return `<span class="ayah" id="ayah-${ch.id}-${v.verse_number}">${esc(t)} <span class="ayah-num">${toArabicNumerals(v.verse_number)}</span> </span>`;
     }).join('');
     const header = idx === 0
@@ -441,7 +462,7 @@ ${sections}
 function surahXhtmlBilingual(ed, ch, verses, opts) {
   const showBismillah = ch.bismillah_pre && ch.id !== 9 && ch.id !== 1;
   const cards = verses.map(v => {
-    const ar = (v[ed.arabicField] || '').trim();
+    const ar = normalizeArabic((v[ed.arabicField] || '').trim());
     const tr = (v.translations && v.translations[0] && v.translations[0].text || '')
       .replace(/<sup[^>]*foot_note[^>]*>.*?<\/sup>/gi, '') // drop footnote markers
       .replace(/<[^>]+>/g, '').trim();
@@ -474,7 +495,7 @@ function pageXhtml(ed, pageNo, items, chById, opts) {
       if (showBismillah) html += `  <p class="bismillah" dir="rtl" lang="ar">${esc(BISMILLAH)}</p>\n`;
       html += dividerImg(opts);
     }
-    flow.push(`<span class="ayah" id="ayah-${it.ch}-${it.num}">${esc(it.text)} <span class="ayah-num">${toArabicNumerals(it.num)}</span> </span>`);
+    flow.push(`<span class="ayah" id="ayah-${it.ch}-${it.num}">${esc(normalizeArabic(it.text))} <span class="ayah-num">${toArabicNumerals(it.num)}</span> </span>`);
   }
   flush();
   const body = `<section epub:type="text" class="page" id="page-${pageNo}" aria-label="Halaman ${pageNo}">
@@ -674,7 +695,7 @@ async function buildEdition(ed, shared) {
 `<?xml version="1.0" encoding="UTF-8"?>
 <container version="1.0" xmlns="urn:oasis:names:tc:opendocument:xmlns:container">
   <rootfiles>
-    <rootfile full-path="OEBPS/content.opf" media-type="application/oebps-package"/>
+    <rootfile full-path="OEBPS/content.opf" media-type="application/oebps-package+xml"/>
   </rootfiles>
 </container>`);
 
@@ -687,10 +708,13 @@ async function buildEdition(ed, shared) {
   // cover is a single lightweight PNG divider (decoded once, reused per surah).
   const imageList = [];
 
-  const coverPath = path.join(ASSETS_DIR, 'cover.jpg');
+  // Dedicated Al-Qur'an cover (the ornate "al-Qur'an al-Karim" plate). Kept
+  // separate from assets/cover.jpg, which the Juz 'Amma builder also uses — a
+  // shared path would let one book's cover overwrite the other's on rebuild.
+  const coverPath = path.join(ASSETS_DIR, 'alquran_karim_cover.jpg');
   const hasCoverImage = fs.existsSync(coverPath);
   if (hasCoverImage) oebps.file('images/cover.jpg', fs.readFileSync(coverPath));
-  else console.log(`  ! assets/cover.jpg not found — using a generated text cover.`);
+  else console.log(`  ! assets/alquran_karim_cover.jpg not found — using a generated text cover.`);
 
   // Optional ornamental divider (PNG). Shown under each surah header.
   const dividerPath = path.join(ASSETS_DIR, 'divider.png');

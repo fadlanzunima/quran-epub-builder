@@ -51,11 +51,36 @@ async function getKemenag(id) {
   return rows;
 }
 
+// The IndoPak source uses a few letters the baked Kemenag font (LPMQ Isep
+// Misbah) has no glyph for, so Chrome falls back to Times New Roman — the
+// letter stops joining ("putus") and unmapped glyphs show as tofu boxes.
+// Re-encode those identical letters to the forms LPMQ actually ships, with no
+// change to the text itself:
+//   ٮ + hamza (U+066E + U+0655/U+0654)  ->  ئ  (U+0626)  hamza-on-ya seat
+//   ٮ (U+066E, alef-maqsura carrier)    ->  ى  (U+0649)
+//   ی + hamza (U+06CC + U+0621)         ->  ئ  (U+0626)
+//   ی (U+06CC, Farsi yeh)               ->  ي  (U+064A)
+//   ڪ (U+06AA, swash kaf)               ->  ك  (U+0643)
+// The IndoPak text also carries Private-Use glyphs (U+E000–U+F8FF) — font-
+// private pause/ayah-end ornaments that only the IndoPak webfont can draw, so
+// they always show as tofu boxes in any other font. Every one sits next to a
+// standard waqf mark or an ayah boundary we already render ourselves, so they
+// are decorative here and are dropped.
+function normalizeForLpmq(text) {
+  return text
+    .replace(/ٮ([ٕٔ])/g, 'ئ')
+    .replace(/ٮ/g, 'ى')
+    .replace(/یء/g, 'ئ')
+    .replace(/ی/g, 'ي')
+    .replace(/ڪ/g, 'ك')
+    .replace(/[-]/g, '');
+}
+
 function arabicFor(id) {
   const f = path.join(CACHE, `verses_${id}_text_indopak_none_p1.json`);
   const data = JSON.parse(fs.readFileSync(f, 'utf8'));
   const verses = data.verses || data;
-  return verses.map(v => v.text_indopak.trim());
+  return verses.map(v => normalizeForLpmq(v.text_indopak.trim()));
 }
 
 function buildSurah(id) {

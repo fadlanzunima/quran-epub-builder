@@ -99,6 +99,31 @@ const BOOKS = {
 nav[role="doc-toc"] ol{list-style:none;padding:0;margin:.3em 0}
 nav[role="doc-toc"] ol ol{padding-inline-start:1.4em}
 nav[role="doc-toc"] li{margin:.15em 0}`
+  },
+  alquran: {
+    epub: path.join(ROOT, 'dist', 'Al-Quran', 'epub', 'Universal', 'Al-Quran.epub'),
+    pdf: path.join(ROOT, 'dist', 'Al-Quran', 'pdf', 'Universal', 'Al-Quran.pdf'),
+    pdfX4: path.join(ROOT, 'dist', 'Al-Quran', 'pdf', 'Xteink-X4', 'Al-Quran Xteink X4.pdf'),
+    // Keep the ornate "al-Qur'an al-Karim" cover — do NOT replace it. Uses the
+    // white-padded copy so coverFit:'cover' shows the full border without cropping.
+    coverImage: path.join(ROOT, 'assets', 'alquran_karim_cover_pdf.jpg'),
+    arabicSelector: '.quran-flow',
+    // Every Arabic-bearing element → Kemenag (verses, surah names, bismillah,
+    // ayah + page numbers), matching the Juz 'Amma X4 look.
+    arabicFamilySelectors: '.quran-flow,.surah-name-ar,.bismillah,.ayah-num,.page-num',
+    // The EPUB's 'QuranArabic' @font-face points at UthmanicHafs; repoint it to
+    // the Kemenag font so inherited Arabic (TOC surah names) matches too.
+    swapArabicFontFiles: ['UthmanicHafs.otf'],
+    // Universal profile also bakes the Kemenag font (comfortable A5 size).
+    arabic: {
+      selector: '.quran-flow',
+      familySelectors: '.quran-flow,.surah-name-ar,.bismillah,.ayah-num,.page-num',
+      font: QURAN_FONT,
+      px: 23,
+      lineHeight: 2.0,
+    },
+    // One "al-Qur'an" group → all 114 surahs, so the .xtcz chapter list fills.
+    outlineGroups: [{ title: 'Al-Qur’an al-Karim', match: /surah-\d+\.xhtml$/ }],
   }
 };
 
