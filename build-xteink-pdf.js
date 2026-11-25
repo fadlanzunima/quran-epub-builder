@@ -32,7 +32,7 @@ const JSZip = require('jszip');
 
 const ROOT = __dirname;
 const EPUB_PATH = path.join(ROOT, 'dist', 'Al-Quran', 'epub', 'Universal', 'Al-Quran.epub');
-const COVER_PATH = path.join(ROOT, 'assets', 'Gemini_Generated_Image_tzoyi8tzoyi8tzoy.jpg');
+const COVER_PATH = path.join(ROOT, 'assets', 'alquran_karim_text_cover.jpg');
 const MM_PER_IN = 25.4;
 
 // Quran font baked into the PDF, overriding the EPUB's embedded @font-face.
@@ -110,7 +110,8 @@ body{box-sizing:border-box;padding:${t.marginMm}mm!important;font-size:${t.arabi
 /* CONTINUOUS FLOW: no fixed page box, no forced breaks, no clipping. */
 .page{border:0!important;padding:0!important;margin:0!important;page-break-before:auto!important;break-before:auto!important;overflow:visible!important}
 
-.quran-flow{font-size:1em!important;line-height:${t.arabicLineHeight}!important;text-align:justify;text-align-last:right}
+.quran-flow{font-size:1em!important;line-height:${t.arabicLineHeight}!important;text-align:justify;text-align-last:right;font-weight:bold}
+.surah-name-ar,.bismillah,.ayah-num{font-weight:bold}
 .surah-banner{margin:.5em 0 .4em!important;padding:.3em .25em!important;border-width:1px!important;break-inside:avoid}
 .surah-name-ar{font-size:${t.surahNameArPx}px!important;line-height:1.3!important}
 .surah-name-tr{font-size:.72em!important;margin-top:.05em!important}

@@ -12,3 +12,10 @@ dist/x3-preview.png
 # assets/fonts/*.ttf
 # assets/cover.jpg
 # assets/divider.png
+
+# Oversized generated device artifacts — too big for git (GitHub rejects >100MB).
+# Regenerate: .xtc/.xtcz via the official Xteink app from the X4 PDFs; the image
+# EPUB via its build step. Keep the source PDFs/EPUBs (small) committed instead.
+dist/**/*.xtc
+dist/**/*.xtcz
+dist/Al-Quran/epub/Xteink-X4/Al-Quran Xteink X4 (Gambar).epub
