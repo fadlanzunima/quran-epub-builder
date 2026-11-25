@@ -40,7 +40,7 @@ const ONLY = (ARGS.find(a => a.startsWith('--only=')) || '').split('=')[1] || nu
 const OFFLINE = ARGS.includes('--offline');
 
 /* Bismillah (shown as a decorative line before every surah except 1 and 9). */
-const BISMILLAH = 'بِسْمِ ٱللَّهِ ٱلرَّحْمَٰنِ ٱلرَّحِيمِ';
+const BISMILLAH = 'بِسْمِ ٱللَّهِ ٱلرَّحْمَٰنِ ٱلرَّحِيمِ';
 
 /* ----------------------------------------------------------------------------
  * Edition configuration
@@ -116,15 +116,24 @@ const sleep = (ms) => new Promise(r => setTimeout(r, ms));
  * book). No-op on text without the small letters (e.g. the IndoPak edition).
  */
 const normalizeArabic = (s) => String(s)
+  // --- IndoPak edition (text_indopak): re-encode to the forms the baked LPMQ
+  // (Kemenag) font ships, IDENTICAL to the Juz 'Amma book (build-juzamma.js). ---
+  .replace(/ٮ([ٕٔ])/g, 'ئ')  // dotless beh + hamza -> yeh-hamza seat (ئ)
+  .replace(/ٮ/g, 'ى')         // dotless beh -> alef maqsura (ى)
+  .replace(/یء/g, 'ئ')        // farsi yeh + hamza -> yeh-hamza (ئ)
+  .replace(/ی/g, 'ي')         // farsi yeh -> yeh (ي)
+  .replace(/ڪ/g, 'ك')         // swash kaf -> kaf (ك)
+  .replace(/[-]/g, '')  // strip IndoPak Private-Use pause/ayah-end glyphs (tofu)
+  // --- Uthmani edition (text_uthmani) only; no-ops on IndoPak text ---
   .replace(/ُۥ/g, 'ٗ')         // damma + small waw -> inverted damma  (hū)
   .replace(/ِۦ/g, 'ٖ')         // kasra + small yaa -> subscript alef   (hī)
   .replace(/ۥ/g, 'ٗ')               // any stray small waw -> inverted damma
   .replace(/ۦ/g, 'ٖ')               // any stray small yaa -> subscript alef
-  // The Uthmani text seats the dagger alef (U+0670) on a tatweel kashida after
-  // connecting letters (مَـٰن) but not after non-joining ones (ذَٰلِكَ, صِرَٰط), so the
-  // standing alef looks inconsistent. Drop the kashida so every dagger alef sits
-  // directly on its letter — uniform, and identical to the Juz 'Amma (IndoPak) book.
-  .replace(/ـٰ/g, 'ٰ');  // tatweel + dagger alef -> dagger alef
+  .replace(/ـٰ/g, 'ٰ')  // tatweel + dagger alef -> dagger alef (drop the kashida seat)
+  // Canonical combining order is shadda BEFORE the vowel. Some sources store the
+  // vowel first (e.g. َّ instead of َّ); the LPMQ font then drops the shadda — so
+  // the tashdeed vanishes on لله etc. Swap any harakat/tanwin + shadda back.
+  .replace(/([ً-ِ])ّ/g, 'ّ$1');
 
 /** Minimal XML/HTML escape for text nodes and attributes. */
 const esc = (s) => String(s)

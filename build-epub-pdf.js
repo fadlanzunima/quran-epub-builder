@@ -111,9 +111,10 @@ nav[role="doc-toc"] li{margin:.15em 0}`
     // Every Arabic-bearing element → Kemenag (verses, surah names, bismillah,
     // ayah + page numbers), matching the Juz 'Amma X4 look.
     arabicFamilySelectors: '.quran-flow,.surah-name-ar,.bismillah,.ayah-num,.page-num',
-    // The EPUB's 'QuranArabic' @font-face points at UthmanicHafs; repoint it to
-    // the Kemenag font so inherited Arabic (TOC surah names) matches too.
-    swapArabicFontFiles: ['UthmanicHafs.otf'],
+    // The EPUB's 'QuranArabic' @font-face points at the edition font (IndoPak =
+    // Scheherazade, Uthmani = UthmanicHafs); repoint it to the Kemenag font so
+    // inherited Arabic (TOC surah names) matches too.
+    swapArabicFontFiles: ['ScheherazadeNew-Regular.ttf', 'UthmanicHafs.otf'],
     // Universal profile also bakes the Kemenag font (comfortable A5 size).
     arabic: {
       selector: '.quran-flow',
