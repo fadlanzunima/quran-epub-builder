@@ -90,7 +90,7 @@ body{
      holds up to 3 digits). No CSS pill/border/background behind it. */
   font-family:'QuranArabic',"Scheherazade New",serif;
   display:inline-block;
-  margin:0 .25em;
+  margin:0 .06em;               /* sit close to the verse text, not floating far */
   font-size:.9em;
   line-height:1.2;
   vertical-align:middle;

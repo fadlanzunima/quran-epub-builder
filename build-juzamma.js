@@ -73,6 +73,7 @@ function normalizeForLpmq(text) {
     .replace(/یء/g, 'ئ')
     .replace(/ی/g, 'ي')
     .replace(/ڪ/g, 'ك')
+    .replace(/ۡ/g, 'ْ')  // IndoPak jazm (U+06E1) -> standard sukun (U+0652); LPMQ renders U+06E1 nearly invisibly
     .replace(/[-]/g, '');
 }
 

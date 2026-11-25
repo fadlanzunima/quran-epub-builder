@@ -123,6 +123,7 @@ const normalizeArabic = (s) => String(s)
   .replace(/یء/g, 'ئ')        // farsi yeh + hamza -> yeh-hamza (ئ)
   .replace(/ی/g, 'ي')         // farsi yeh -> yeh (ي)
   .replace(/ڪ/g, 'ك')         // swash kaf -> kaf (ك)
+  .replace(/ۡ/g, 'ْ')  // IndoPak jazm (U+06E1) -> standard sukun (U+0652); LPMQ renders U+06E1 nearly invisibly
   .replace(/[-]/g, '')  // strip IndoPak Private-Use pause/ayah-end glyphs (tofu)
   // --- Uthmani edition (text_uthmani) only; no-ops on IndoPak text ---
   .replace(/ُۥ/g, 'ٗ')         // damma + small waw -> inverted damma  (hū)
