@@ -45,6 +45,12 @@ const PROFILES = {
     coverFit: 'cover',
     pdfKey: 'pdf', bakeArabic: false,
   },
+  // clara05 / 1.2 -> text appears another 1.2x bigger (~2.4x vs universal).
+  clara042: {
+    widthMm: 58.3, heightMm: 78.1, marginCss: '5mm 4mm',
+    coverFit: 'cover',
+    pdfKey: 'pdf', bakeArabic: false,
+  },
   x4: {
     // Matches the proven-working Xteink reference `Al-Quran.pdf` (Universal):
     // page 91×123mm, Arabic 15pt (=20px), Kemenag font, hierarchical bookmarks.
