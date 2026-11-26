@@ -95,6 +95,30 @@ const DEVICES = {
       pageNumPx: 15,
     },
   },
+  // Kobo Clara (HD / 2E / Colour) — 6" 1072x1448 @ 300 PPI = 90.76x122.61 mm.
+  // Same continuous-flow, baked-font pipeline as the Xteink profiles: Clara
+  // reflow-shapes Arabic itself and breaks LPMQ/Scheherazade, so we bake the
+  // glyphs into a PDF and later wrap each page as an image (build-clara-image-
+  // epub.py) — Clara just draws pixels. CSS px are device-independent (96/in),
+  // so sizes are chosen for the 90.76 mm physical width: slightly larger than
+  // the X4 for a fuller, comfortable mushaf line on the bigger panel.
+  clara: {
+    label: 'Kobo Clara',
+    out: 'Al-Quran Kobo Clara.pdf',
+    dir: path.join('Al-Quran', 'pdf', 'Kobo-Clara'),
+    resPx: [1072, 1448],
+    ppi: 300,
+    type: {
+      marginMm: 4.0,
+      marginVMm: 4.0,
+      arabicPx: 21,
+      arabicLineHeight: 1.95,
+      surahNameArPx: 30,
+      bismillahPx: 22,
+      ayahNumEm: 0.9,
+      pageNumPx: 20,
+    },
+  },
 };
 
 function geometry(dev) {

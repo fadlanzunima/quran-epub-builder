@@ -39,6 +39,8 @@ def build(src_pdf, out_path, title, limit=0, width=1072, colors=16):
     pages = []       # (name, png-bytes)
     for i in range(n):
         pix = doc[i].get_pixmap(matrix=fitz.Matrix(zoom, zoom), alpha=False)
+        if i == 0:
+            IMG_W, IMG_H = pix.width, pix.height   # use the REAL pixel size (not rounded)
         img = Image.frombytes("RGB", (pix.width, pix.height), pix.samples)
         buf = io.BytesIO()
         img.convert("P", palette=Image.ADAPTIVE, colors=colors).save(buf, "PNG", optimize=True)
@@ -47,16 +49,32 @@ def build(src_pdf, out_path, title, limit=0, width=1072, colors=16):
     MOD = "2026-11-25T00:00:00Z"
     UID = "urn:uuid:quran-clara-baked-v1"
 
-    # --- per-page XHTML (fixed viewport = image size) ---
-    def page_xhtml(img_name):
+    # --- per-page XHTML ---
+    # The image is wrapped in an SVG with a viewBox + preserveAspectRatio="xMidYMid
+    # meet". That makes the page scale to FIT the screen (contain, centred) on EVERY
+    # reader — both when the fixed-layout viewport is honoured AND when a reader (or
+    # a not-yet-kepubified EPUB) falls back to reflow. Absolute-px <img> sizing
+    # instead overflowed on Kobo's reflow fallback — the image rendered at 1072 CSS
+    # px on a ~750 px-wide panel, so only the top-left corner showed (zoomed/cropped).
+    # SVG "meet" never overflows: it shrinks the page to the smaller of width/height.
+    # The COVER (first page) instead uses "slice" so it fills the WHOLE screen edge-
+    # to-edge (full-bleed) — "slice" scales up to cover the viewport and crops the
+    # overflow. The cover aspect (0.738) ≈ Clara's (0.74), so the crop is ~4 px (the
+    # decorative border has margin to spare). Content pages keep "meet" so no ayah is
+    # ever clipped.
+    def page_xhtml(img_name, fit="meet"):
         return (f'<?xml version="1.0" encoding="utf-8"?>\n'
                 f'<!DOCTYPE html>\n'
                 f'<html xmlns="http://www.w3.org/1999/xhtml" xmlns:epub="http://www.idpf.org/2007/ops">\n'
                 f'<head><meta charset="utf-8"/>'
                 f'<meta name="viewport" content="width={IMG_W}, height={IMG_H}"/>'
-                f'<style>*{{margin:0;padding:0}}html,body{{width:{IMG_W}px;height:{IMG_H}px}}'
-                f'img{{width:{IMG_W}px;height:{IMG_H}px;display:block}}</style></head>\n'
-                f'<body><img src="../images/{img_name}" alt=""/></body></html>\n')
+                f'<style>*{{margin:0;padding:0}}html,body{{width:100%;height:100%;background:#fff}}'
+                f'svg{{display:block;width:100%;height:100%}}</style></head>\n'
+                f'<body><svg xmlns="http://www.w3.org/2000/svg" xmlns:xlink="http://www.w3.org/1999/xlink" '
+                f'width="100%" height="100%" viewBox="0 0 {IMG_W} {IMG_H}" '
+                f'preserveAspectRatio="xMidYMid {fit}">'
+                f'<image width="{IMG_W}" height="{IMG_H}" xlink:href="../images/{img_name}"/>'
+                f'</svg></body></html>\n')
 
     manifest, spine = [], []
     for idx, (img_name, _) in enumerate(pages):
@@ -147,7 +165,8 @@ def build(src_pdf, out_path, title, limit=0, width=1072, colors=16):
         z.writestr("OEBPS/toc.ncx", ncx, compress_type=zipfile.ZIP_DEFLATED)
         for idx, (img_name, jpg) in enumerate(pages):
             z.writestr(f"OEBPS/images/{img_name}", jpg, compress_type=zipfile.ZIP_STORED)
-            z.writestr(f"OEBPS/text/pg{idx+1}.xhtml", page_xhtml(img_name), compress_type=zipfile.ZIP_DEFLATED)
+            fit = "slice" if idx == 0 else "meet"   # cover = full-bleed, pages = fit
+            z.writestr(f"OEBPS/text/pg{idx+1}.xhtml", page_xhtml(img_name, fit), compress_type=zipfile.ZIP_DEFLATED)
 
     import os
     mb = os.path.getsize(out_path) / 1048576

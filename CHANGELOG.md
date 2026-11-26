@@ -5,6 +5,90 @@ Format tanggal: YYYY-MM-DD.
 
 ---
 
+## 2026-11-26 — Al-Quran Kobo Clara (EPUB gambar dari PDF)
+
+### Fixed — halaman ter-zoom & terpotong di perangkat (hanya pojok kiri-atas tampil)
+- **Masalah:** tiap halaman di- set ukuran **piksel absolut** (`<img>`/`body`
+  `width:1072px;height:1452px`). Saat Clara TIDAK merender sebagai fixed-layout
+  murni (mis. EPUB belum di-kepubify, atau firmware fallback ke reflow), 1072 CSS-px
+  jauh lebih lebar dari panel logis (~750 px) → gambar meluber, yang terlihat cuma
+  **pojok kiri-atas yang membesar** (persis screenshot user: cover ter-zoom/terpotong).
+- **Perbaikan:** tiap gambar kini dibungkus **SVG** ber-`viewBox="0 0 W H"` +
+  `preserveAspectRatio="xMidYMid meet"` di `page_xhtml()`
+  [build-clara-image-epub.py](build-clara-image-epub.py); `svg{width:100%;height:100%}`.
+  "meet" selalu **fit-to-screen** (contain, di tengah, tak pernah meluber) di SEMUA
+  reader — baik fixed-layout dihormati maupun fallback reflow. `IMG_W/IMG_H` kini
+  diambil dari ukuran piksel PNG asli (1072×1452), jadi viewBox == viewport == gambar.
+- **Verifikasi:** render ulang (1293 hlm); viewport `(1072,1452)` == viewBox, SVG
+  100%×100%, `preserveAspectRatio` meet ada. Aspek gambar (0.738) ≈ aspek layar Clara
+  (0.74) → terisi penuh. Struktur tetap: fixed-layout, `<guide>`, cover-meta, 0 DRM,
+  mimetype stored, 114 TOC.
+
+### Changed — ukuran file dikecilkan (89 MB → 58 MB) via palet 4-warna
+- **Masalah:** EPUB gambar ~89 MB (jadi ~98 MB setelah kepubify) — palet PNG 16-warna
+  mubazir karena halaman Clara = **teks hitam di atas putih** (profil `clara`
+  memakai `background:#fff;color:#000`, bukan krem/hijau seperti buku lain).
+- **Perbaikan:** render PNG dengan **4 warna** (`colors=4`) — argumen keenam
+  `build-clara-image-epub.py`; npm `build:clara-image` kini memanggil `... 0 1072 4`.
+  4 aras abu masih memberi anti-alias pada tepi huruf & harakat.
+- **Hasil:** `dist/Al-Quran/epub/Kobo-Clara/Al-Quran Kobo Clara (Gambar).epub`
+  **58,4 MB** (dari 89,1 MB, ~34% lebih kecil); perkiraan kepub ~62-65 MB (dari 98 MB).
+- **Verifikasi render:** page 3 Al-Baqarah 4-warna — huruf, harakat, dan nomor ayat
+  berlian tetap tajam, tanpa penurunan kualitas yang terlihat. Struktur utuh: cover
+  `slice`, isi `meet`, fixed-layout, `<guide>`, cover-meta, 0 DRM, 1293 gambar, 114 TOC.
+  (Catatan: default skrip tetap 16-warna untuk buku krem/hijau — Juz 'Amma/Dzikir;
+  hanya Al-Quran Clara yang hitam-putih sehingga aman di 4-warna.)
+
+### Changed — cover dibuat full-page (full-bleed)
+- **Permintaan:** cover mengisi penuh layar, bukan fit dengan pinggiran putih.
+- **Perbaikan:** halaman cover (pg1) kini `preserveAspectRatio="xMidYMid slice"`
+  (mengisi penuh viewport, crop kelebihan) di [build-clara-image-epub.py](build-clara-image-epub.py);
+  halaman isi tetap `meet` agar tak ada ayat terpotong. Karena aspek cover (0.738) ≈
+  layar Clara (0.74), crop hanya ~4 px (border ornamen punya ruang sisa).
+- **Verifikasi:** pg1 = `slice`, pg2 = `meet` (dikonfirmasi dari XHTML hasil build).
+
+### Added — profil device `clara` di build-xteink-pdf.js
+- **Tujuan:** Kobo Clara reflow-shape Arab sendiri → LPMQ/Scheherazade putus
+  (lihat [[kobo-clara-arabic-rendering]]). Solusi = bake glyph ke PDF lalu bungkus
+  tiap halaman sebagai gambar (sama ide dengan .xtc Xteink). Agar PDF Clara lewat
+  **pipeline karakter yang IDENTIK X4** (keheh→kaf di sumber, `foldSpaces` EN/EM,
+  `tightenAyahNumbers`, `text-align:right` anti-kashida, font page-num Scheherazade,
+  outline 114 surah), ditambahkan profil `clara` ke [build-xteink-pdf.js](build-xteink-pdf.js).
+- **Ukuran:** 1072×1448 px @ 300 PPI = 90.76×122.61 mm (panel Clara HD/2E/Colour).
+  Font sedikit lebih besar dari X4 (arabic 21px, margin 4mm) untuk baris mushaf yang
+  penuh-nyaman di layar 6".
+- **Jalankan:** `npm run build:clara-pdf` (= `node build-xteink-pdf.js clara`).
+- **Hasil:** `dist/Al-Quran/pdf/Kobo-Clara/Al-Quran Kobo Clara.pdf` — **1293 hlm**,
+  42 MB, 114 bookmark. (Menggantikan PDF lama Nov-23 yang belum punya fix keheh/justify.)
+
+### Added — EPUB page-image Kobo Clara (ambil dari PDF) + repoint npm script
+- **Alur (sesuai permintaan):** PDF baked → EPUB gambar → user kepubify sendiri.
+  `build-clara-image-epub.py` membungkus tiap halaman PDF jadi PNG 16-warna, OPF
+  fixed-layout (pre-paginated), `<guide>` EPUB2, `<meta name="cover">`, container
+  `application/oebps-package+xml`, mimetype stored, TOC 114 surah dari outline PDF.
+- **Jalankan:** `npm run build:clara-image` (atau `npm run build:clara` untuk PDF+EPUB).
+- **Output (plain .epub, bukan .kepub):** `dist/Al-Quran/epub/Kobo-Clara/Al-Quran Kobo
+  Clara (Gambar).epub` — 1293 hlm, 1072×1448 px native, ~89 MB. Validasi: mimetype
+  first+stored, container media-type benar, fixed-layout, `<guide>`, cover-meta,
+  114 link TOC, 0 file DRM.
+- **Verifikasi render (bukan sekadar edit):** page 2 Al-Fatihah, page 3 Al-Baqarah,
+  **page 7 Al-Baqarah 2:23 `كُنْتُمْ` tersambung sempurna** (character check lolos —
+  keheh sudah dinormalisasi di sumber), cover full-bleed, nomor halaman 3-digit
+  **`٦٠٤` satu unit** (An-Nas, tak pecah jadi dua ornamen). Scan sumber:
+  0 keheh / 0 dotless-beh / 0 huruf Urdu / 0 PUA.
+- **npm:** `build:clara-pdf` di-repoint ke `build-xteink-pdf.js clara` (pipeline
+  terverifikasi); `build-clara-pdf.js` lama (layout kotak-tetap, tanpa fix karakter)
+  dipindah ke `build:clara-pdf-legacy`.
+
+### Removed — file Kobo lama yang error/usang
+- Dihapus dari `dist/Al-Quran/kepub/Kobo/`:
+  `Al-Quran (Clara).kepub.epub`, `Al-Quran (Mushaf Kobo).kepub.epub`,
+  `Al-Quran.kepub.epub` — ketiganya **reflow kepub** (0 page-image) yang bikin Arab
+  putus / tak mau import di Clara. Juga `Al-Quran Kobo Clara (Gambar).kepub.epub`
+  (image lama, dibangun dari PDF **X4** beraspek salah) — digantikan EPUB native di atas.
+
+---
+
 ## 2026-11-25 — Al-Quran Xteink (X4 / X3)
 
 ### Fixed — huruf putus di kata ber-keheh (bug "كُنتُمۡ")
