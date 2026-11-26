@@ -130,10 +130,20 @@ Format tanggal: YYYY-MM-DD.
   `normalizeArabic()` (builder.js) & `normalizeForLpmq()` (build-juzamma.js).
 - **Verifikasi:** render Al-Kahf 1 — nomor ① kini sejarak satu spasi, seragam dgn ayat lain.
 
+### Fixed — ruang kosong besar setelah nomor halaman (ayat berikut loncat)
+- **Masalah:** di sebagian halaman, setelah nomor halaman mushaf ada ~40pt kosong lalu
+  ayat berikutnya loncat ke halaman baru, padahal masih muat.
+- **Sebab:** `orphans`/`widows` default Chrome = 2 → menolak menaruh 1 baris awal blok
+  ayat berikutnya di dasar halaman, memaksa seluruh blok pindah → sisa kosong.
+- **Perbaikan:** `html,body{orphans:1;widows:1}` di [build-xteink-pdf.js](build-xteink-pdf.js)
+  → konten mengalir mengisi halaman (sesuai niat continuous-flow).
+- **Verifikasi:** render Al-Kahf — ayat 5-7 kini langsung menyusul nomor ٢٩٣; total
+  halaman turun 1944→1926 (X4).
+
 ### File yang di-rebuild & terverifikasi
 - `dist/Al-Quran/epub/Universal/Al-Quran (IndoPak Format).epub` → disalin ke `Al-Quran.epub`
-- `dist/Al-Quran/pdf/Xteink-X4/Al-Quran Xteink X4.pdf` (1944 hlm, 114 bookmark)
-- `dist/Al-Quran/pdf/Xteink-X3/Al-Quran Xteink X3.pdf` (2061 hlm, 114 bookmark)
+- `dist/Al-Quran/pdf/Xteink-X4/Al-Quran Xteink X4.pdf` (1926 hlm, 114 bookmark)
+- `dist/Al-Quran/pdf/Xteink-X3/Al-Quran Xteink X3.pdf` (2039 hlm, 114 bookmark)
 
 > **Langkah device:** `.xtcz` lama sudah kedaluwarsa — konversi ulang PDF X4 baru lewat
 > aplikasi Xteink resmi agar perbaikan keheh + cover ikut terbawa.

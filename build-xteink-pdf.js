@@ -119,7 +119,7 @@ function printCss(dev) {
    it stays full-bleed (see .cover-wrap). */
 @page{size:${g.widthMm}mm ${g.heightMm}mm;margin:${t.marginVMm}mm 0}
 @page cover{margin:0}
-html,body{width:${g.widthMm}mm;margin:0!important;padding:0!important;background:#ffffff!important;color:#000000!important;-webkit-print-color-adjust:exact!important;print-color-adjust:exact!important}
+html,body{width:${g.widthMm}mm;margin:0!important;padding:0!important;background:#ffffff!important;color:#000000!important;-webkit-print-color-adjust:exact!important;print-color-adjust:exact!important;orphans:1!important;widows:1!important}
 body{box-sizing:border-box;padding:0 ${t.marginMm}mm!important;font-size:${t.arabicPx}px}
 
 /* Cover: one full device screen, then break. Uses the margin-0 'cover' named
