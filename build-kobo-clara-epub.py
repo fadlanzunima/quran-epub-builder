@@ -65,9 +65,17 @@ body{{padding:0 3%;font-family:'QuranArabic',serif;line-height:1.85;-webkit-hyph
 .surah-meta{{font-size:.7em;color:var(--muted);margin-top:.15em;direction:rtl;}}
 .bismillah{{font-family:'QuranArabic',serif;direction:rtl;text-align:center;font-size:1.9em;line-height:1.7;margin:.5em 0 .8em;}}
 .surah-divider{{display:none;}}
-.quran-flow{{direction:rtl;text-align:justify;text-align-last:right;font-family:'QuranArabic',serif;font-size:1.4em;line-height:2.0;}}
+/* NO justify on Kobo: the kepub engine stretches EVERY space — including the
+   IndoPak intra-word thin spaces/tatweel — into huge gaps that read as broken
+   letters. Ragged-left (right-aligned RTL) keeps the words intact. */
+.quran-flow{{direction:rtl;text-align:right;text-align-last:right;font-family:'QuranArabic',serif;font-size:1.4em;line-height:2.0;}}
 .ayah{{display:inline;}}
-.page-num{{text-align:center;font-family:'QuranArabic',serif;font-size:.9em;color:var(--muted);margin:.5em 0 0;}}
+/* text-align-last is INHERITED from .quran-flow; a one-line block follows it,
+   not text-align — so the mushaf page number drifted right. Pin both. */
+.page-num{{text-align:center;text-align-last:center;font-family:'QuranArabic',serif;font-size:.9em;color:var(--muted);margin:.5em 0 0;}}
+/* IndoPak waqf letters (standalone ط ج ز ص م ق س) — small + raised like the
+   printed mushaf instead of full-size floating letters. */
+.waqf{{font-size:.55em;vertical-align:super;color:var(--muted);margin:0 .08em;}}
 .ayah-num{{font-family:'QuranArabic',serif;display:inline-block;box-sizing:content-box;min-width:1.05em;padding:.06em .4em;margin:0 .3em;font-size:.6em;line-height:1.2;text-align:center;vertical-align:middle;white-space:nowrap;color:#2f3e2f;background:#f7f3e8;border:1.5px solid #879486;border-radius:1.4em;}}
 .toc-juz{{font-weight:bold;}}
 h1,h2{{text-align:center;font-weight:normal;}}
@@ -198,6 +206,9 @@ def main():
         opf = opf.replace(old_font, new_font)
     if a.x4_style:  # divider image is dropped, so de-register it too
         opf = re.sub(r'\s*<item\b[^>]*href="[^"]*divider\.png"[^>]*/>', "", opf)
+    # TOC page out of the reading flow: Kobo's own chapter drawer (nav/NCX)
+    # still works, but the Daftar Isi no longer appears as book pages.
+    opf = re.sub(r'<itemref\s+idref="nav"[^/>]*/>', '<itemref idref="nav" linear="no"/>', opf)
 
     # --- write output (drop DRM, swap font refs, mimetype first+stored) ---
     with zipfile.ZipFile(a.out, "w") as zout:
@@ -226,6 +237,10 @@ def main():
                                   lambda m: m.group(1) + BASMALA + m.group(2), text)
                     if a.x4_style:  # strip divider <img> (file + manifest dropped)
                         text = re.sub(r'\s*<img[^>]*class="surah-divider"[^>]*/>', "", text)
+                        # standalone IndoPak waqf letters (never real words) ->
+                        # small raised marks like the printed mushaf
+                        text = re.sub(r"(?<= )([طجزصمقس])(?= )",
+                                      r'<span class="waqf">\1</span>', text)
                     if a.canonical_marks:
                         text = canonical_marks(text)
                 if n.endswith(".css"):
