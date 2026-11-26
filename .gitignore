@@ -3,19 +3,13 @@ node_modules/
 build/
 .claude/
 
-# dist/ is tracked on purpose: the built .epub deliverables are committed.
-# ...except the preview-xteink.js QA screenshots (regenerate with `npm run preview:x4` / `preview:x3`).
-dist/x4-preview.png
-dist/x3-preview.png
+# dist/ build artifacts are NO LONGER committed — every rebuilt PDF/EPUB/xtc
+# added a new 40-60 MB blob kept forever, bloating .git to 1.7 GB and making
+# fetch/clone slow. Regenerate with `npm run build` / `npm run build:x4-*`.
+# To share built files, attach them to a GitHub Release instead of committing.
+dist/
 
 # Keep assets structure but ignore large binaries if you prefer:
 # assets/fonts/*.ttf
 # assets/cover.jpg
 # assets/divider.png
-
-# Oversized generated device artifacts — too big for git (GitHub rejects >100MB).
-# Regenerate: .xtc/.xtcz via the official Xteink app from the X4 PDFs; the image
-# EPUB via its build step. Keep the source PDFs/EPUBs (small) committed instead.
-dist/**/*.xtc
-dist/**/*.xtcz
-dist/Al-Quran/epub/Xteink-X4/Al-Quran Xteink X4 (Gambar).epub
