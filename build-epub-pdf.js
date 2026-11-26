@@ -51,6 +51,12 @@ const PROFILES = {
     coverFit: 'cover',
     pdfKey: 'pdf', bakeArabic: false,
   },
+  // universal x0.6 -> text appears ~1.67x bigger; used by the bilingual terjemah.
+  clara06: {
+    widthMm: 84, heightMm: 112.4, marginCss: '8mm 7mm',
+    coverFit: 'cover',
+    pdfKey: 'pdf', bakeArabic: false,
+  },
   x4: {
     // Matches the proven-working Xteink reference `Al-Quran.pdf` (Universal):
     // page 91×123mm, Arabic 15pt (=20px), Kemenag font, hierarchical bookmarks.
@@ -74,6 +80,7 @@ const BOOKS = {
     pdfX4: path.join(ROOT, 'dist', 'Dzikir Pagi Petang', 'pdf', 'Xteink-X4', 'Dzikir Pagi dan Petang Xteink X4.pdf'),
     // User asked to swap the text cover for this image.
     coverImage: path.join(ROOT, 'assets', 'cover_dzikirpagipetang.jpg'),
+    skipNav: true,
     arabicSelector: '.arabic-text',
     // Hierarchical bookmarks like the reference (group → items). Pagi = d1–d18,
     // Petang = d19–d35. Non-matching pages get no bookmark.
@@ -156,6 +163,7 @@ nav[role="doc-toc"] li{margin:.15em 0}`,
     pdf: path.join(ROOT, 'dist', 'Al Quran dan Terjemahnya (Bahasa Indonesia)', 'pdf', 'Kobo-Clara', 'Al Quran dan Terjemahnya (Clara).pdf'),
     pdfX4: path.join(ROOT, 'dist', 'Al Quran dan Terjemahnya (Bahasa Indonesia)', 'pdf', 'Xteink-X4', 'Al Quran dan Terjemahnya Xteink X4.pdf'),
     coverImage: path.join(ROOT, 'assets', 'al-quran-bahasa-indonesia.png'),
+    skipNav: true,
     arabicSelector: '.arabic',
     // Arabic-bearing bits of the verse card + surah banner -> Kemenag font.
     arabicFamilySelectors: '.arabic,.surah-title,.ayah-num',
@@ -172,7 +180,7 @@ nav[role="doc-toc"] li{margin:.15em 0}`,
     // UNBOX the verse card: the 1px rounded frame + fat padding + 1em gap eat
     // a lot of the small page. A thin dotted rule under each verse keeps the
     // separation; the Arabic/translation divider stays but hugs tighter.
-    extraCss: `.verse{border:0!important;border-radius:0!important;padding:0 0 .3em!important;margin:0 0 .4em!important;border-bottom:1px dotted #888!important}
+    extraCss: `.verse{border:0!important;border-radius:0!important;padding:0 0 .3em!important;margin:0 0 .4em!important;border-bottom:1px dotted #888!important;page-break-inside:auto!important;break-inside:auto!important}
 .translation{border-top:0!important;padding-top:.1em!important;margin:.15em 0 0!important}
 nav[role="doc-toc"] ol{list-style:none;padding:0;margin:.3em 0}
 nav[role="doc-toc"] ol ol{padding-inline-start:1.4em}
@@ -415,6 +423,14 @@ async function convert(zip, book, tempDir, profile) {
     const docDirRelToRoot = path.posix.dirname(path.posix.relative(opfRoot, spine[i]));
     const docDir = docDirRelToRoot === '.' ? '' : docDirRelToRoot;
     const xhtml = fs.readFileSync(docAbs, 'utf8');
+    // skipNav: drop the book's own Daftar-Isi pages from the print flow — the
+    // PDF outline (-> Kobo's chapter menu) already covers navigation, and in a
+    // page-image EPUB those pages are dead weight (their links don't work).
+    if (book.skipNav &&
+        (/(^|\/)(nav|toc|daftar[^/]*)\.xhtml$/i.test(spine[i]) ||
+         /epub:type="toc"|role="doc-toc"/.test(xhtml))) {
+      continue;
+    }
     const { bodyClass, body, head, title } = extractBodyAndHead(xhtml, spine[i]);
     collectStyleRefs(head, docDir, links, inlineStyles);
     const cls = ['pdf-chapter', bodyClass].filter(Boolean).join(' ');
@@ -429,6 +445,12 @@ async function convert(zip, book, tempDir, profile) {
   const styleLinks = [...links].map(href => `<link rel="stylesheet" href="${href}"/>`).join('\n');
   const styleBlocks = [...inlineStyles].map(css => `<style>${css}</style>`).join('\n');
   const coverSection = `<section class="pdf-cover"><img src="${coverRelToRoot}" alt="Cover"/></section>`;
+  // Chrome only emits a named destination for anchors that are the TARGET of an
+  // in-page link. The book's own nav used to supply those links, but skipNav can
+  // drop it — so always inject a zero-height (still rendered, NOT display:none)
+  // link block covering every chapter anchor, keeping the PDF outline resolvable.
+  const destLinks = `<div style="height:0;overflow:hidden" aria-hidden="true">${
+    outlineItems.map(o => `<a href="#${o.name}">.</a>`).join('')}</div>`;
 
   // Bake the Kemenag (LPMQ Isep Misbah) Arabic font + sizing. For the X4 profile
   // every book gets it (so the X4 renders pre-shaped glyphs, not its limited
@@ -481,7 +503,7 @@ ${styleBlocks}
 <style>${printCss(profile)}
 ${arabicCss}
 ${book.extraCss || ''}</style></head>
-<body>${coverSection}${chapters.join('\n')}</body></html>`;
+<body>${coverSection}${chapters.join('\n')}${destLinks}</body></html>`;
 
   const printHtml = path.join(rootDir, 'print.html');
   fs.writeFileSync(printHtml, printable, 'utf8');
