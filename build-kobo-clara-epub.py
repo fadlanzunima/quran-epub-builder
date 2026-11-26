@@ -42,6 +42,39 @@ def latinize_toc(text):
     """Strip the Arabic juz segment from TOC labels (tofu in the Kobo UI)."""
     return re.sub(r"(Juz \d+)\s*—[^<]*", r"\1", text)
 
+def canonical_marks(text):
+    """builder.js stores SHADDA-before-vowel (an LPMQ-font quirk fix). Kobo's
+    engine only stacks marks in canonical order (vowel ccc27-32, then shadda
+    ccc33); the anti-canonical pair renders as detached floating marks. Swap
+    back for non-LPMQ fonts (Amiri positions both orders fine elsewhere)."""
+    return re.sub("ّ([ً-ِ])", "\\1ّ", text)
+
+# X4-style sheet (mirrors build-x4-epub.js x4Css): slim hairline banner, no
+# divider, continuous justified RTL flow — but keeps this edition's @font-face
+# (font unchanged) and the cream/green ayah pill.
+def x4_css(font_face_rule):
+    return f"""{font_face_rule}
+:root{{--ink:#000;--paper:#fff;--muted:#222;}}
+*{{box-sizing:border-box;}}
+html,body{{margin:0;background:var(--paper);color:var(--ink);}}
+body{{padding:0 3%;font-family:'QuranArabic',serif;line-height:1.85;-webkit-hyphens:none;hyphens:none;}}
+.page{{border:0;padding:0;margin:0 0 .4em;}}
+.surah-banner{{border:0;border-bottom:1px solid var(--ink);border-radius:0;padding:.2em 0 .5em;margin:.2em 0 .7em;text-align:center;background:none;}}
+.surah-name-ar{{font-family:'QuranArabic',serif;font-size:1.55em;line-height:1.35;}}
+.surah-name-tr{{font-size:.9em;letter-spacing:.03em;color:var(--muted);margin-top:.1em;}}
+.surah-meta{{font-size:.7em;color:var(--muted);margin-top:.15em;direction:rtl;}}
+.bismillah{{font-family:'QuranArabic',serif;direction:rtl;text-align:center;font-size:1.9em;line-height:1.7;margin:.5em 0 .8em;}}
+.surah-divider{{display:none;}}
+.quran-flow{{direction:rtl;text-align:justify;text-align-last:right;font-family:'QuranArabic',serif;font-size:1.4em;line-height:2.0;}}
+.ayah{{display:inline;}}
+.page-num{{text-align:center;font-family:'QuranArabic',serif;font-size:.9em;color:var(--muted);margin:.5em 0 0;}}
+.ayah-num{{font-family:'QuranArabic',serif;display:inline-block;box-sizing:content-box;min-width:1.05em;padding:.06em .4em;margin:0 .3em;font-size:.6em;line-height:1.2;text-align:center;vertical-align:middle;white-space:nowrap;color:#2f3e2f;background:#f7f3e8;border:1.5px solid #879486;border-radius:1.4em;}}
+.toc-juz{{font-weight:bold;}}
+h1,h2{{text-align:center;font-weight:normal;}}
+.cover-wrap{{width:100%;height:100vh;min-height:100%;margin:0;padding:0;display:flex;align-items:center;justify-content:center;overflow:hidden;text-align:center;background:var(--paper);}}
+.cover-wrap img{{width:100%;height:100%;max-width:100%;max-height:100vh;object-fit:contain;object-position:center;}}
+"""
+
 def set_latin_title(opf, title):
     """Collapse every dc:title into ONE Latin title (Kobo UI has no Arabic)."""
     opf = re.sub(r"\s*<dc:title\b[^>]*>[^<]*</dc:title>", "", opf)
@@ -80,6 +113,13 @@ def main():
     ap.add_argument("--cover")
     ap.add_argument("--title", default="Al-Qur'an al-Karim",
                     help="Latin dc:title (Kobo library UI has no Arabic font)")
+    ap.add_argument("--x4-style", action="store_true",
+                    help="Xteink-X4-like layout: slim hairline banner, no divider "
+                         "image, continuous justified RTL flow (font unchanged)")
+    ap.add_argument("--canonical-marks", action="store_true",
+                    help="reorder shadda-before-vowel back to canonical "
+                         "vowel-then-shadda (fixes floating detached marks on "
+                         "Kobo with non-LPMQ fonts like Amiri)")
     a = ap.parse_args()
 
     zin = zipfile.ZipFile(a.src)
@@ -156,6 +196,8 @@ def main():
     opf = set_latin_title(opf, a.title)
     if a.swap:
         opf = opf.replace(old_font, new_font)
+    if a.x4_style:  # divider image is dropped, so de-register it too
+        opf = re.sub(r'\s*<item\b[^>]*href="[^"]*divider\.png"[^>]*/>', "", opf)
 
     # --- write output (drop DRM, swap font refs, mimetype first+stored) ---
     with zipfile.ZipFile(a.out, "w") as zout:
@@ -168,6 +210,8 @@ def main():
             data = zin.read(n)
             if a.swap and new_font and re.search(r'fonts/' + re.escape(old_font) + r'$', n):
                 continue  # skip the old font file; the new one is added below
+            if a.x4_style and n.endswith("images/divider.png"):
+                continue  # X4 layout drops the ornament divider
             if n == opf_path:
                 data = opf.encode("utf-8")
             elif n.endswith((".css", ".opf", ".xhtml", ".html", ".ncx")):
@@ -180,8 +224,16 @@ def main():
                     # one-glyph basmala: kepubify spans can't split it mid-word
                     text = re.sub(r'(class="bismillah"[^>]*>)[^<]+(</)',
                                   lambda m: m.group(1) + BASMALA + m.group(2), text)
+                    if a.x4_style:  # strip divider <img> (file + manifest dropped)
+                        text = re.sub(r'\s*<img[^>]*class="surah-divider"[^>]*/>', "", text)
+                    if a.canonical_marks:
+                        text = canonical_marks(text)
                 if n.endswith(".css"):
-                    text += KOBO_CSS_APPEND     # ayah pill + basmala size
+                    if a.x4_style:
+                        mface = re.search(r"@font-face\{[^}]*\}", text)
+                        text = x4_css(mface.group(0) if mface else "")
+                    else:
+                        text += KOBO_CSS_APPEND     # ayah pill + basmala size
                 data = text.encode("utf-8")
             zout.writestr(n, data, compress_type=zipfile.ZIP_DEFLATED)
         if a.swap:
