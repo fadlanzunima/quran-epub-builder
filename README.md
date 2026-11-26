@@ -13,6 +13,26 @@ Both are **Arabic-only (no translation)** and differ only in script style. They 
 
 ---
 
+## ⚠️ Berkas sumber / referensi — JANGAN dihapus
+
+Berkas berikut adalah **bahan baku** yang dibaca ulang oleh skrip build. Menghapusnya
+membuat build gagal sampai di-regenerasi. (Sisanya di `dist/` — `.kepub.epub`, `.xtc`,
+`.xtcz`, PDF device, EPUB gambar — hanyalah **output**, aman dihapus & bisa dibuat ulang.)
+
+| Berkas | Dipakai oleh | Regenerasi |
+|---|---|---|
+| `dist/Al-Quran/epub/Universal/Al-Quran.epub` | **SEMUA** build PDF device (`build-xteink-pdf.js` clara/x4/x3), `build-epub-pdf.js`, `build-clara-pdf.js` | `node builder.js --offline --only=indopak` lalu salin `Al-Quran (IndoPak Format).epub` → `Al-Quran.epub` |
+| `dist/Al-Quran/epub/Universal/Al-Quran (IndoPak Format).epub` | Edisi kanonik (asal `Al-Quran.epub`) + `npm run check` | sama seperti di atas |
+| `dist/Al-Quran/pdf/Kobo-Clara/Al-Quran Kobo Clara.pdf` | `build:clara-image` (dibungkus jadi EPUB gambar) | `npm run build:clara-pdf` |
+| `assets/fonts/LPMQ-IsepMisbah.ttf`, `ScheherazadeNew-Regular.ttf`, `AmiriQuran-Regular.ttf` | di-bake ke PDF/EPUB | — (aset) |
+| `assets/alquran_karim_text_cover.jpg`, `alquran_karim_cover*.jpg` | cover PDF/EPUB | — (aset) |
+| `.cache/` | cache API quran.com (agar `builder.js --offline` jalan) | re-fetch online |
+
+> Intinya: apa pun di `dist/.../epub/Universal/Al-Quran.epub`, `assets/`, `.cache/`,
+> dan PDF di `pdf/Kobo-Clara/` = **sumber**. Selebihnya di `dist/` = hasil build.
+
+---
+
 ## 1. Install & run
 
 ```bash
