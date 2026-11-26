@@ -52,7 +52,25 @@ def canonical_marks(text):
 # X4-style sheet (mirrors build-x4-epub.js x4Css): slim hairline banner, no
 # divider, continuous justified RTL flow — but keeps this edition's @font-face
 # (font unchanged) and the cream/green ayah pill.
-def x4_css(font_face_rule):
+# ayah_ornament=True: LPMQ auto-encloses digit runs in its own ayah ornament,
+# so the CSS pill double-decorates and a 3-digit number splits across two
+# ornaments — use the font's motif instead (no border + nowrap, cf. 97e2190).
+def x4_css(font_face_rule, ayah_ornament=False):
+    if ayah_ornament:
+        # font's own ornament encloses the digits; CSS stays out of the way.
+        # page-num must NOT use the Quran font: LPMQ's ornament only holds two
+        # digits, so a 3-digit mushaf page number splits into two medallions —
+        # render it as plain small digits instead.
+        ayah_num_rule = (".ayah-num{font-family:'QuranArabic',serif;display:inline-block;"
+                         "margin:0 .2em;font-size:.9em;line-height:1.2;vertical-align:middle;"
+                         "white-space:nowrap;color:var(--ink);border:0;background:none;padding:0;}"
+                         "\n.page-num{font-family:serif !important;}")
+    else:
+        ayah_num_rule = (".ayah-num{font-family:'QuranArabic',serif;display:inline-block;"
+                         "box-sizing:content-box;min-width:1.05em;padding:.06em .4em;margin:0 .3em;"
+                         "font-size:.6em;line-height:1.2;text-align:center;vertical-align:middle;"
+                         "white-space:nowrap;color:#2f3e2f;background:#f7f3e8;"
+                         "border:1.5px solid #879486;border-radius:1.4em;}")
     return f"""{font_face_rule}
 :root{{--ink:#000;--paper:#fff;--muted:#222;}}
 *{{box-sizing:border-box;}}
@@ -72,11 +90,11 @@ body{{padding:0 3%;font-family:'QuranArabic',serif;line-height:1.85;-webkit-hyph
 .ayah{{display:inline;}}
 /* text-align-last is INHERITED from .quran-flow; a one-line block follows it,
    not text-align — so the mushaf page number drifted right. Pin both. */
-.page-num{{text-align:center;text-align-last:center;font-family:'QuranArabic',serif;font-size:.9em;color:var(--muted);margin:.5em 0 0;}}
+.page-num{{text-align:center;text-align-last:center;white-space:nowrap;font-family:'QuranArabic',serif;font-size:.9em;color:var(--muted);margin:.5em 0 0;}}
 /* IndoPak waqf letters (standalone ط ج ز ص م ق س) — small + raised like the
    printed mushaf instead of full-size floating letters. */
 .waqf{{font-size:.55em;vertical-align:super;color:var(--muted);margin:0 .08em;}}
-.ayah-num{{font-family:'QuranArabic',serif;display:inline-block;box-sizing:content-box;min-width:1.05em;padding:.06em .4em;margin:0 .3em;font-size:.6em;line-height:1.2;text-align:center;vertical-align:middle;white-space:nowrap;color:#2f3e2f;background:#f7f3e8;border:1.5px solid #879486;border-radius:1.4em;}}
+{ayah_num_rule}
 .toc-juz{{font-weight:bold;}}
 h1,h2{{text-align:center;font-weight:normal;}}
 .cover-wrap{{width:100%;height:100vh;min-height:100%;margin:0;padding:0;display:flex;align-items:center;justify-content:center;overflow:hidden;text-align:center;background:var(--paper);}}
@@ -124,6 +142,9 @@ def main():
     ap.add_argument("--x4-style", action="store_true",
                     help="Xteink-X4-like layout: slim hairline banner, no divider "
                          "image, continuous justified RTL flow (font unchanged)")
+    ap.add_argument("--ayah-ornament", action="store_true",
+                    help="use the font's own digit-enclosing ayah ornament "
+                         "(LPMQ) instead of the CSS pill")
     ap.add_argument("--canonical-marks", action="store_true",
                     help="reorder shadda-before-vowel back to canonical "
                          "vowel-then-shadda (fixes floating detached marks on "
@@ -246,7 +267,8 @@ def main():
                 if n.endswith(".css"):
                     if a.x4_style:
                         mface = re.search(r"@font-face\{[^}]*\}", text)
-                        text = x4_css(mface.group(0) if mface else "")
+                        text = x4_css(mface.group(0) if mface else "",
+                                      ayah_ornament=a.ayah_ornament)
                     else:
                         text += KOBO_CSS_APPEND     # ayah pill + basmala size
                 data = text.encode("utf-8")
