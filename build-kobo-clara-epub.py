@@ -12,11 +12,43 @@ Guarantees for a sideloaded Kobo import:
     so the book shows in the Kobo library and opens (not greyed as "DRM").
   * optional Arabic-font swap (Scheherazade breaks on Clara reflow; Amiri Quran
     renders correctly) and an optional embedded cover image.
+  * Kobo-UI safe labels — the library/TOC chrome has NO Arabic font, so the
+    dc:title is forced to a Latin one (--title) and the Arabic juz segment is
+    stripped from nav/NCX labels ("Juz 3 — الجزء ٣" -> "Juz 3"); dual dc:title
+    (a known Kobo import breaker) is collapsed to one.
+  * bismillah -> the one-codepoint basmala ligature U+FDFD (present in Amiri
+    Quran), so kepubify spans / the Kobo engine can never split it mid-word.
+  * .ayah-num gets the full pill rule (cream bg + ring + radius) — the base
+    rule is lost in some editions, leaving bare digits with no motif.
 
   python build-kobo-clara-epub.py <src.epub> <out.epub> \
-      [--swap OLD.ttf NEW.ttf] [--cover cover.jpg]
+      [--swap OLD.ttf NEW.ttf] [--cover cover.jpg] [--title "Latin Title"]
 """
 import sys, os, re, zipfile, argparse
+
+BASMALA = "﷽"  # ﷽ ARABIC LIGATURE BISMILLAH...
+
+# Full pill restored for the ayah marker + readable size for the basmala glyph.
+KOBO_CSS_APPEND = (
+    "\n/* === Kobo Clara optim (build-kobo-clara-epub.py) === */\n"
+    ".ayah-num{display:inline-block;box-sizing:content-box;min-width:1.05em;"
+    "padding:.06em .4em;margin:0 .3em;font-size:.6em;line-height:1.2;"
+    "text-align:center;vertical-align:middle;white-space:nowrap;color:#2f3e2f;"
+    "background:#f7f3e8;border:1.5px solid #879486;border-radius:1.4em;}\n"
+    ".bismillah{font-size:1.9em !important;line-height:1.6 !important;}\n"
+)
+
+def latinize_toc(text):
+    """Strip the Arabic juz segment from TOC labels (tofu in the Kobo UI)."""
+    return re.sub(r"(Juz \d+)\s*—[^<]*", r"\1", text)
+
+def set_latin_title(opf, title):
+    """Collapse every dc:title into ONE Latin title (Kobo UI has no Arabic)."""
+    opf = re.sub(r"\s*<dc:title\b[^>]*>[^<]*</dc:title>", "", opf)
+    return opf.replace(
+        '<metadata xmlns:dc="http://purl.org/dc/elements/1.1/">',
+        '<metadata xmlns:dc="http://purl.org/dc/elements/1.1/">\n'
+        f"    <dc:title>{title}</dc:title>", 1)
 
 def find_opf(z):
     cont = z.read("META-INF/container.xml").decode("utf-8", "replace")
@@ -46,6 +78,8 @@ def main():
     ap.add_argument("src"); ap.add_argument("out")
     ap.add_argument("--swap", nargs=2, metavar=("OLD", "NEW"))
     ap.add_argument("--cover")
+    ap.add_argument("--title", default="Al-Qur'an al-Karim",
+                    help="Latin dc:title (Kobo library UI has no Arabic font)")
     a = ap.parse_args()
 
     zin = zipfile.ZipFile(a.src)
@@ -114,6 +148,15 @@ def main():
     if cover_href and toc_href and text_href:
         opf = ensure_guide(opf, opf_dir, cover_href, toc_href, text_href)
 
+    # Kobo-UI fixes on the OPF itself:
+    #  * single Latin dc:title (Arabic title = tofu; dual dc:title breaks import)
+    #  * the font swap must ALSO hit the manifest href — the OPF is written from
+    #    this pre-built string, so the generic swap below never reaches it (this
+    #    was the bug that left the manifest pointing at the removed old font).
+    opf = set_latin_title(opf, a.title)
+    if a.swap:
+        opf = opf.replace(old_font, new_font)
+
     # --- write output (drop DRM, swap font refs, mimetype first+stored) ---
     with zipfile.ZipFile(a.out, "w") as zout:
         zout.writestr("mimetype", "application/epub+zip", compress_type=zipfile.ZIP_STORED)
@@ -131,6 +174,14 @@ def main():
                 text = data.decode("utf-8", "replace")
                 if a.swap:
                     text = text.replace(old_font, new_font)
+                if n.endswith((".ncx",)) or n.endswith("nav.xhtml"):
+                    text = latinize_toc(text)   # Arabic juz label = tofu in Kobo UI
+                elif n.endswith((".xhtml", ".html")):
+                    # one-glyph basmala: kepubify spans can't split it mid-word
+                    text = re.sub(r'(class="bismillah"[^>]*>)[^<]+(</)',
+                                  lambda m: m.group(1) + BASMALA + m.group(2), text)
+                if n.endswith(".css"):
+                    text += KOBO_CSS_APPEND     # ayah pill + basmala size
                 data = text.encode("utf-8")
             zout.writestr(n, data, compress_type=zipfile.ZIP_DEFLATED)
         if a.swap:
