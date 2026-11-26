@@ -69,6 +69,7 @@ const DEVICES = {
     ppi: 220,                 // X4 family: 219–220 PPI
     type: {
       marginMm: 2.2,
+      marginVMm: 3.0,           // top/bottom breathing room on EVERY page (via @page margin)
       arabicPx: 17.5,
       arabicLineHeight: 2.0,
       surahNameArPx: 23,
@@ -85,6 +86,7 @@ const DEVICES = {
     ppi: 259,
     type: {
       marginMm: 2.0,
+      marginVMm: 2.7,           // top/bottom breathing room on EVERY page (via @page margin)
       arabicPx: 16,           // page is narrower than X4 → slightly smaller keeps words/line similar
       arabicLineHeight: 1.95,
       surahNameArPx: 21,
@@ -111,14 +113,20 @@ function printCss(dev) {
   return `
 @font-face{font-family:'QuranArabic';font-style:normal;font-weight:400;src:url('fonts/${QURAN_FONT.file}') format('${QURAN_FONT.fmt}');}
 @font-face{font-family:'PageNumFont';font-style:normal;font-weight:400;src:url('fonts/${PAGENUM_FONT.file}') format('${PAGENUM_FONT.fmt}');}
-@page{size:${g.widthMm}mm ${g.heightMm}mm;margin:0}
+/* Vertical margin lives on @page so it repeats on EVERY sheet (body padding
+   would only pad the first/last page since the text is one continuous flow).
+   Horizontal margin stays on body. The cover uses a named page with margin 0 so
+   it stays full-bleed (see .cover-wrap). */
+@page{size:${g.widthMm}mm ${g.heightMm}mm;margin:${t.marginVMm}mm 0}
+@page cover{margin:0}
 html,body{width:${g.widthMm}mm;margin:0!important;padding:0!important;background:#ffffff!important;color:#000000!important;-webkit-print-color-adjust:exact!important;print-color-adjust:exact!important}
-body{box-sizing:border-box;padding:${t.marginMm}mm!important;font-size:${t.arabicPx}px}
+body{box-sizing:border-box;padding:0 ${t.marginMm}mm!important;font-size:${t.arabicPx}px}
 
-/* Cover: one full device screen, then break. Negative margins cancel the body
-   padding so the image is full-bleed AND still fits exactly one page — otherwise
-   the body padding pushes the full-height cover onto a 2nd sheet (blank page 1). */
-.cover-wrap{box-sizing:border-box;width:${g.widthMm}mm;height:${g.heightMm}mm;min-height:0;margin:-${t.marginMm}mm -${t.marginMm}mm 0;padding:0;display:block;overflow:hidden;page-break-after:always;break-after:page;background:#ffffff!important}
+/* Cover: one full device screen, then break. Uses the margin-0 'cover' named
+   page (no vertical @page margin) and a negative horizontal margin to cancel the
+   body's horizontal padding, so the image is full-bleed AND fits exactly one
+   page — otherwise the margins push the full-height cover onto a 2nd sheet. */
+.cover-wrap{page:cover;box-sizing:border-box;width:${g.widthMm}mm;height:${g.heightMm}mm;min-height:0;margin:0 -${t.marginMm}mm;padding:0;display:block;overflow:hidden;page-break-after:always;break-after:page;background:#ffffff!important}
 .cover-wrap img{display:block;width:100%;height:100%;max-width:none;max-height:none;object-fit:fill;object-position:center}
 
 /* CONTINUOUS FLOW: no fixed page box, no forced breaks, no clipping. */
@@ -132,8 +140,11 @@ body{box-sizing:border-box;padding:${t.marginMm}mm!important;font-size:${t.arabi
 .surah-name-ar,.bismillah,.ayah-num{font-weight:bold}
 .surah-banner{margin:.5em 0 .4em!important;padding:.3em .25em!important;border-width:1px!important;break-inside:avoid}
 .surah-name-ar{font-size:${t.surahNameArPx}px!important;line-height:1.3!important}
-.surah-name-tr{font-size:.72em!important;margin-top:.05em!important}
+/* Latin title made uniform with the Arabic name: same ink colour + bold
+   (was muted grey / normal weight). */
+.surah-name-tr{font-size:.72em!important;margin-top:.05em!important;color:#000!important;font-weight:bold!important}
 .surah-meta{font-size:.6em!important;margin-top:.05em!important}
+.surah-meta .ayah-count{font-weight:bold!important}  /* bold the verse count */
 .bismillah{font-size:${t.bismillahPx}px!important;margin:.25em 0 .35em!important}
 .surah-divider{display:none!important}
 /* Plain digits, NOT the font's ayah-end ornament. LPMQ only has the ornament
@@ -141,7 +152,7 @@ body{box-sizing:border-box;padding:${t.marginMm}mm!important;font-size:${t.arabi
    e.g. ٦٠٤ splits into TWO ornaments (٦٠ + ٤). Disabling the ligatures renders
    the page number as plain digits in a single slot. Bigger px compensates for
    the ornament's lost size. */
-.page-num{font-family:'PageNumFont',serif!important;font-size:${t.pageNumPx}px!important;margin:.2em 0 .6em!important;color:#000!important;font-weight:bold!important}
+.page-num{font-family:'PageNumFont',serif!important;font-size:${t.pageNumPx}px!important;line-height:1!important;margin:.25em 0!important;color:#000!important;font-weight:bold!important}
 .ayah-num{font-size:${t.ayahNumEm}em!important;margin:0 .2em!important;padding:0!important;min-width:0!important;border:0!important;background:none!important;border-radius:0!important;color:#000!important;white-space:nowrap!important}
 `;
 }
@@ -222,10 +233,25 @@ function addPdfOutline(pdfPath, items, tempDir) {
   return false;
 }
 
+// Wrap the verse count inside .surah-meta ("Makkiyyah · ١١٠ آيات") in a
+// <strong class="ayah-count"> so CSS can bold just the count, not "Makkiyyah".
+function styleBanner(html) {
+  return html.replace(
+    /(<div class="surah-meta">)([\s\S]*?)(<\/div>)/g,
+    (m, open, body, close) =>
+      open + body.replace(/([٠-٩]+\s*آيات)/, '<strong class="ayah-count">$1</strong>') + close);
+}
+
+// EN/EM spaces (U+2002/U+2003) in the IndoPak source sit before some ayah-end
+// marks (e.g. Al-Kahf 1 "عِوَجًا ⟨EN SPACE⟩ ؕ ①"). They are fixed-width and DON'T
+// collapse like a normal space, so the ayah number floats far from its verse.
+// Fold them to a normal space so HTML collapses the gap.
+const foldSpaces = (html) => html.replace(/[  ]/g, ' ');
+
 function extractBody(xhtml, filename) {
   const match = xhtml.match(/<body\b[^>]*>([\s\S]*?)<\/body>/i);
   if (!match) throw new Error(`No body found in ${filename}`);
-  return tightenAyahNumbers(match[1]);
+  return styleBanner(tightenAyahNumbers(foldSpaces(match[1])));
 }
 
 function validatePdf(pdfPath, dev) {

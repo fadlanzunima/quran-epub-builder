@@ -94,10 +94,46 @@ Format tanggal: YYYY-MM-DD.
 - **Verifikasi:** render hlm 604 (Scheherazade, satu baris jelas); `get_text` konfirmasi
   nomor 3-digit = satu unit teks di X4 & X3 (tak pecah).
 
+### Fixed — overlap teks di tepi atas/bawah tiap halaman
+- **Masalah:** padding vertikal ada di `body`, tapi karena teks mengalir kontinu,
+  padding itu hanya berlaku di halaman pertama/terakhir → halaman isi lain teksnya
+  menempel/overlap ke tepi atas & bawah.
+- **Perbaikan:** margin vertikal dipindah ke `@page{margin:<marginVMm>mm 0}`
+  (berlaku di SETIAP halaman); horizontal tetap di `body`. Cover memakai named-page
+  `@page cover{margin:0}` + `.cover-wrap{page:cover}` agar tetap full-bleed (tak kena
+  margin vertikal, tak jadi halaman kosong). Nilai: X4 3.0mm, X3 2.7mm (diperkecil
+  dari 4.0/3.6 atas permintaan — tetap tanpa overlap/terpotong).
+- **Verifikasi:** halaman isi kini ada ruang atas/bawah; cover tetap edge-to-edge di
+  page 0; tak ada blank page; outline 114 utuh.
+
+### Changed — banner surah: judul Latin seragam + jumlah ayat bold
+- **Judul Latin** (`.surah-name-tr`, mis. "Al-Kahf — The Cave .18") dibuat **hitam +
+  bold** agar seragam dengan nama Arab (sebelumnya abu `--muted`, normal).
+- **Jumlah ayat** di meta ("١١٠ آيات") dibungkus `<strong class="ayah-count">` via
+  `styleBanner()` dan dibold (tak termasuk "Makkiyyah").
+- Di [build-xteink-pdf.js](build-xteink-pdf.js). Verifikasi: render banner Al-Kahf.
+
+### Changed — jarak nomor halaman ke ayat diperkecil (tidak rapat)
+- **Masalah:** nomor halaman mushaf punya gap vertikal besar ke ayat (line-height +
+  margin bawaan).
+- **Perbaikan:** `.page-num` → `line-height:1` + `margin:.25em 0` (simetris) di
+  [build-xteink-pdf.js](build-xteink-pdf.js).
+- **Verifikasi:** gap atas/bawah ~6pt (sebelumnya ~30pt+) — rapat tapi tak nempel.
+
+### Fixed — nomor ayat "jauh sendiri" (mis. Al-Kahf 1)
+- **Masalah:** sebagian ayat punya **U+2002 (EN SPACE)** / U+2003 (EM SPACE) sebelum
+  tanda akhir ayat (mis. "عِوَجًا ⟨EN SPACE⟩ ؕ ①"). Spasi lebar fiksed ini **tidak
+  di-collapse** HTML seperti spasi biasa → nomor ayat mengambang jauh dari ayatnya;
+  ayat lain (spasi biasa) rapat. (597× U+2002, 24× U+2003 di seluruh Qur'an.)
+- **Perbaikan:** `foldSpaces()` di [build-xteink-pdf.js](build-xteink-pdf.js) ubah
+  U+2002/U+2003 → spasi biasa (lalu HTML collapse). Juga ditambah ke sumber
+  `normalizeArabic()` (builder.js) & `normalizeForLpmq()` (build-juzamma.js).
+- **Verifikasi:** render Al-Kahf 1 — nomor ① kini sejarak satu spasi, seragam dgn ayat lain.
+
 ### File yang di-rebuild & terverifikasi
 - `dist/Al-Quran/epub/Universal/Al-Quran (IndoPak Format).epub` → disalin ke `Al-Quran.epub`
-- `dist/Al-Quran/pdf/Xteink-X4/Al-Quran Xteink X4.pdf` (1808 hlm, 114 bookmark)
-- `dist/Al-Quran/pdf/Xteink-X3/Al-Quran Xteink X3.pdf` (1903 hlm, 114 bookmark)
+- `dist/Al-Quran/pdf/Xteink-X4/Al-Quran Xteink X4.pdf` (1944 hlm, 114 bookmark)
+- `dist/Al-Quran/pdf/Xteink-X3/Al-Quran Xteink X3.pdf` (2061 hlm, 114 bookmark)
 
 > **Langkah device:** `.xtcz` lama sudah kedaluwarsa — konversi ulang PDF X4 baru lewat
 > aplikasi Xteink resmi agar perbaikan keheh + cover ikut terbawa.

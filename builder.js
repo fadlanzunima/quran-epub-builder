@@ -126,6 +126,7 @@ const normalizeArabic = (s) => String(s)
   .replace(/ک/g, 'ك')         // keheh (U+06A9, Urdu/Farsi kaf) -> kaf (ك); IndoPak mixes it in (e.g. كنتم), LPMQ lacks it so it falls back to a system font and breaks the join ("putus")
   .replace(/[ھہ]/g, 'ه')      // heh doachashmee (U+06BE) / heh goal (U+06C1) -> heh (ه)
   .replace(/ے/g, 'ى')         // yeh barree (U+06D2) -> alef maqsura (ى)
+  .replace(/[  ]/g, ' ')  // EN/EM space -> normal space; fixed-width spaces don't collapse in HTML, so they push the ayah number far from its verse (e.g. Al-Kahf 1)
   .replace(/ۡ/g, 'ْ')  // IndoPak jazm (U+06E1) -> standard sukun (U+0652); LPMQ renders U+06E1 nearly invisibly
   .replace(/[-]/g, '')  // strip IndoPak Private-Use pause/ayah-end glyphs (tofu)
   // --- Uthmani edition (text_uthmani) only; no-ops on IndoPak text ---

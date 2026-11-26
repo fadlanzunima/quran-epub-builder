@@ -76,6 +76,7 @@ function normalizeForLpmq(text) {
     .replace(/ک/g, 'ك')         // keheh (U+06A9, Urdu/Farsi kaf) -> kaf (ك); LPMQ lacks it -> system-font fallback breaks the join ("putus")
     .replace(/[ھہ]/g, 'ه')      // heh doachashmee (U+06BE) / heh goal (U+06C1) -> heh (ه)
     .replace(/ے/g, 'ى')         // yeh barree (U+06D2) -> alef maqsura (ى)
+    .replace(/[  ]/g, ' ')  // EN/EM space -> normal space (fixed-width, don't collapse → push ayah number far from verse)
     .replace(/ۡ/g, 'ْ')  // IndoPak jazm (U+06E1) -> standard sukun (U+0652); LPMQ renders U+06E1 nearly invisibly
     .replace(/[-]/g, '');
 }
