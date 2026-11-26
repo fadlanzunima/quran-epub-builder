@@ -61,12 +61,12 @@ def x4_css(font_face_rule, ayah_ornament=False):
         # page-num must NOT use the Quran font: LPMQ's ornament only holds two
         # digits, so a 3-digit mushaf page number splits into two medallions —
         # render it as plain small digits instead.
-        ayah_num_rule = (".ayah-num{font-family:'QuranArabic',serif;display:inline-block;"
+        ayah_num_rule = (".ayah-num{font-family:'QuranArabic',serif!important;display:inline-block;"
                          "margin:0 .2em;font-size:.9em;line-height:1.2;vertical-align:middle;"
                          "white-space:nowrap;color:var(--ink);border:0;background:none;padding:0;}"
                          "\n.page-num{font-family:serif !important;}")
     else:
-        ayah_num_rule = (".ayah-num{font-family:'QuranArabic',serif;display:inline-block;"
+        ayah_num_rule = (".ayah-num{font-family:'QuranArabic',serif!important;display:inline-block;"
                          "box-sizing:content-box;min-width:1.05em;padding:.06em .4em;margin:0 .3em;"
                          "font-size:.6em;line-height:1.2;text-align:center;vertical-align:middle;"
                          "white-space:nowrap;color:#2f3e2f;background:#f7f3e8;"
@@ -75,22 +75,22 @@ def x4_css(font_face_rule, ayah_ornament=False):
 :root{{--ink:#000;--paper:#fff;--muted:#222;}}
 *{{box-sizing:border-box;}}
 html,body{{margin:0;background:var(--paper);color:var(--ink);}}
-body{{padding:0 3%;font-family:'QuranArabic',serif;line-height:1.85;-webkit-hyphens:none;hyphens:none;}}
+body{{padding:0 3%;font-family:'QuranArabic',serif!important;line-height:1.85;-webkit-hyphens:none;hyphens:none;}}
 .page{{border:0;padding:0;margin:0 0 .4em;}}
 .surah-banner{{border:0;border-bottom:1px solid var(--ink);border-radius:0;padding:.2em 0 .5em;margin:.2em 0 .7em;text-align:center;background:none;}}
-.surah-name-ar{{font-family:'QuranArabic',serif;font-size:1.55em;line-height:1.35;}}
+.surah-name-ar{{font-family:'QuranArabic',serif!important;font-size:1.55em;line-height:1.35;}}
 .surah-name-tr{{font-size:.9em;letter-spacing:.03em;color:var(--muted);margin-top:.1em;}}
 .surah-meta{{font-size:.7em;color:var(--muted);margin-top:.15em;direction:rtl;}}
-.bismillah{{font-family:'QuranArabic',serif;direction:rtl;text-align:center;font-size:1.9em;line-height:1.7;margin:.5em 0 .8em;}}
+.bismillah{{font-family:'QuranArabic',serif!important;direction:rtl;text-align:center;font-size:1.9em;line-height:1.7;margin:.5em 0 .8em;}}
 .surah-divider{{display:none;}}
 /* NO justify on Kobo: the kepub engine stretches EVERY space — including the
    IndoPak intra-word thin spaces/tatweel — into huge gaps that read as broken
    letters. Ragged-left (right-aligned RTL) keeps the words intact. */
-.quran-flow{{direction:rtl;text-align:right;text-align-last:right;font-family:'QuranArabic',serif;font-size:1.4em;line-height:2.0;}}
+.quran-flow{{direction:rtl;text-align:right;text-align-last:right;font-family:'QuranArabic',serif!important;font-size:1.4em;line-height:2.0;}}
 .ayah{{display:inline;}}
 /* text-align-last is INHERITED from .quran-flow; a one-line block follows it,
    not text-align — so the mushaf page number drifted right. Pin both. */
-.page-num{{text-align:center;text-align-last:center;white-space:nowrap;font-family:'QuranArabic',serif;font-size:.9em;color:var(--muted);margin:.5em 0 0;}}
+.page-num{{text-align:center;text-align-last:center;white-space:nowrap;font-family:'QuranArabic',serif!important;font-size:.9em;color:var(--muted);margin:.5em 0 0;}}
 /* IndoPak waqf letters (standalone ط ج ز ص م ق س) — small + raised like the
    printed mushaf instead of full-size floating letters. */
 .waqf{{font-size:.55em;vertical-align:super;color:var(--muted);margin:0 .08em;}}
@@ -227,9 +227,11 @@ def main():
         opf = opf.replace(old_font, new_font)
     if a.x4_style:  # divider image is dropped, so de-register it too
         opf = re.sub(r'\s*<item\b[^>]*href="[^"]*divider\.png"[^>]*/>', "", opf)
-    # TOC page out of the reading flow: Kobo's own chapter drawer (nav/NCX)
-    # still works, but the Daftar Isi no longer appears as book pages.
-    opf = re.sub(r'<itemref\s+idref="nav"[^/>]*/>', '<itemref idref="nav" linear="no"/>', opf)
+    # TOC page out of the reading flow: REMOVE nav from the spine entirely
+    # (linear="no" gets ignored/stripped through kepubify, the page still
+    # showed). EPUB3 allows a spine-less nav; Kobo's chapter drawer keeps
+    # working from the manifest nav + NCX.
+    opf = re.sub(r'\s*<itemref\s+idref="nav"[^/>]*/>', '', opf)
 
     # --- write output (drop DRM, swap font refs, mimetype first+stored) ---
     with zipfile.ZipFile(a.out, "w") as zout:
