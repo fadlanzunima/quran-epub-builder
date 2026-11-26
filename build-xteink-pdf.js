@@ -109,8 +109,8 @@ const DEVICES = {
     resPx: [1072, 1448],
     ppi: 300,
     type: {
-      marginMm: 4.0,
-      marginVMm: 4.0,
+      marginMm: 2.5,            // tighter all-round margins (was 4.0) — fuller text,
+      marginVMm: 2.5,           // page marker sits closer to the sheet edge
       arabicPx: 21,
       arabicLineHeight: 1.95,
       surahNameArPx: 30,

@@ -5,6 +5,45 @@ Format tanggal: YYYY-MM-DD.
 
 ---
 
+## 2026-11-26 (lanjutan) — Kobo Clara: fix judul, margin, + versi teks (highlight)
+
+### Fixed — judul buku jadi "114. An-Nas" (bukan "Al-Qur'an al-Karim")
+- **Masalah:** di Kobo nama buku muncul **"114. An-Nas"**. Penyebab: di
+  `build-clara-image-epub.py`, loop TOC `for lvl, title, pg in doc.get_toc()`
+  **menimpa** parameter `title`, sehingga `dc:title`/`docTitle` memakai entri outline
+  TERAKHIR (114. An-Nas), bukan judul buku.
+- **Perbaikan:** ganti nama variabel loop (`ttl`), parameter `title` tak lagi tertimpa.
+- **Verifikasi:** `dc:title` & `docTitle` = "Al-Qur'an al-Karim"; TOC tetap 114.
+
+### Changed — margin versi Gambar dikecilkan (4mm → 2.5mm)
+- Profil `clara` di [build-xteink-pdf.js](build-xteink-pdf.js): `marginMm`/`marginVMm`
+  4.0→**2.5**. Teks lebih lega/penuh, penanda halaman mushaf duduk lebih dekat tepi.
+- **Hasil:** PDF 1293→**1193 hlm** (lebih padat), EPUB gambar **57,9 MB**. Render page 3
+  Al-Baqarah: teks penuh, nomor halaman ٢ di tepi bawah, Arab tersambung.
+- **Catatan:** desainnya *continuous-flow*, jadi "nomor halaman" = penanda halaman
+  mushaf asli (604) yang ikut mengalir — tak selalu persis di tepi tiap layar.
+
+### Added — versi TEKS (reflow) Amiri Quran untuk highlight/anotasi
+- **Kenapa:** versi Gambar = foto halaman (0 teks) → highlight/anotasi/cari-kata
+  MUSTAHIL. Untuk fitur itu perlu teks asli. LPMQ/Uthmani putus di Clara, tapi
+  **Amiri Quran** terkonfirmasi render benar (lihat [[kobo-clara-arabic-rendering]]).
+- **Build:** `npm run build:clara-text` → `build-kobo-clara-epub.py` ambil
+  `Al-Quran.epub` (reflow, embed ScheherazadeNew sbg family `QuranArabic`), **swap
+  file font → AmiriQuran-Regular.ttf** (family tetap, glyph jadi Amiri), tambah
+  `<guide>` + cover-meta, buang DRM, mimetype stored.
+- **Output:** `dist/Al-Quran/epub/Kobo-Clara/Al-Quran Kobo Clara (Teks).epub` — **3,9 MB**,
+  hanya font Amiri, **teks Arab bisa diseleksi** (32 kata di Al-Fatihah) → highlight/
+  anotasi/cari jalan. Trade-off: gaya font bukan LPMQ mushaf, tanpa layout halaman baked.
+- **Caveat:** per [[clara-kepub-amiri-quran]] kepub reflow Al-Quran historis kadang
+  **tak mau import** di Clara (blocker belum pasti) — **wajib uji di device**; versi
+  Gambar tetap fallback andal.
+
+### Dua deliverable Kobo Clara (pilih sesuai kebutuhan)
+- **Gambar** `...(Gambar).epub` — baca mushaf LPMQ persis, full-bleed, nomor halaman mushaf. Tanpa highlight.
+- **Teks** `...(Teks).epub` — Amiri Quran, bisa highlight/anotasi/cari. Tanpa layout mushaf baked.
+
+---
+
 ## 2026-11-26 — Al-Quran Kobo Clara (EPUB gambar dari PDF)
 
 ### Fixed — halaman ter-zoom & terpotong di perangkat (hanya pojok kiri-atas tampil)

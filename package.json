@@ -11,6 +11,7 @@
     "build:clara-pdf": "node build-xteink-pdf.js clara",
     "build:clara-image": "python build-clara-image-epub.py \"dist/Al-Quran/pdf/Kobo-Clara/Al-Quran Kobo Clara.pdf\" \"dist/Al-Quran/epub/Kobo-Clara/Al-Quran Kobo Clara (Gambar).epub\" \"Al-Qur'an al-Karim\" 0 1072 4",
     "build:clara": "npm run build:clara-pdf && npm run build:clara-image",
+    "build:clara-text": "python build-kobo-clara-epub.py \"dist/Al-Quran/epub/Universal/Al-Quran.epub\" \"dist/Al-Quran/epub/Kobo-Clara/Al-Quran Kobo Clara (Teks).epub\" --swap ScheherazadeNew-Regular.ttf assets/fonts/AmiriQuran-Regular.ttf",
     "build:clara-pdf-legacy": "node build-clara-pdf.js",
     "build:x4-epub": "node build-x4-epub.js",
     "build:x4-kemenag": "node build-x4-kemenag-epub.js",

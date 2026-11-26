@@ -91,14 +91,17 @@ def build(src_pdf, out_path, title, limit=0, width=1072, colors=16):
     # jumps straight to any surah. (The page images themselves aren't hyperlinked
     # — a pre-paginated image book navigates through this nav, not in-page taps.)
     toc_items, ncx_points = [], []
-    for lvl, title, pg in doc.get_toc():
+    # NB: use a loop var other than `title` — reusing `title` would clobber the
+    # book-title parameter, leaving dc:title/docTitle set to the LAST outline entry
+    # (e.g. "114. An-Nas") instead of the real book name.
+    for lvl, ttl, pg in doc.get_toc():
         if pg > n:
             continue
         # keep every outline level (group headers like "Juz 30" / "Dzikir Pagi"
         # AND the items), each one clickable; sub-levels get a small indent.
         indent = '&#160;&#160;' * (lvl - 1)
-        toc_items.append(f'<li><a href="text/pg{pg}.xhtml">{indent}{esc(title)}</a></li>')
-        ncx_points.append((title, pg))
+        toc_items.append(f'<li><a href="text/pg{pg}.xhtml">{indent}{esc(ttl)}</a></li>')
+        ncx_points.append((ttl, pg))
     if not toc_items:
         toc_items.append('<li><a href="text/pg1.xhtml">Mulai</a></li>')
     nav = ('<?xml version="1.0" encoding="utf-8"?>\n<!DOCTYPE html>\n'
