@@ -37,6 +37,14 @@ const PROFILES = {
     coverFit: 'cover',              // page ratio == cover ratio, fills cleanly
     pdfKey: 'pdf', bakeArabic: false,
   },
+  // Half-size sheet, same ratio: when the page-image wrapper rasterises it to
+  // the same 1072 px panel width, everything appears ~2x bigger — for books
+  // read as fixed images on the Clara (no zoom), e.g. the Dzikir.
+  clara05: {
+    widthMm: 70, heightMm: 93.7, marginCss: '6mm 5mm',
+    coverFit: 'cover',
+    pdfKey: 'pdf', bakeArabic: false,
+  },
   x4: {
     // Matches the proven-working Xteink reference `Al-Quran.pdf` (Universal):
     // page 91×123mm, Arabic 15pt (=20px), Kemenag font, hierarchical bookmarks.
@@ -155,7 +163,12 @@ nav[role="doc-toc"] li{margin:.15em 0}`,
     },
     // One group -> all 114 surahs so the TOC/chapter list fills.
     outlineGroups: [{ title: 'Al-Qur’an dan Terjemahnya', match: /surah-\d+\.xhtml$/ }],
-    extraCss: `nav[role="doc-toc"] ol{list-style:none;padding:0;margin:.3em 0}
+    // UNBOX the verse card: the 1px rounded frame + fat padding + 1em gap eat
+    // a lot of the small page. A thin dotted rule under each verse keeps the
+    // separation; the Arabic/translation divider stays but hugs tighter.
+    extraCss: `.verse{border:0!important;border-radius:0!important;padding:0 0 .3em!important;margin:0 0 .4em!important;border-bottom:1px dotted #888!important}
+.translation{border-top:0!important;padding-top:.1em!important;margin:.15em 0 0!important}
+nav[role="doc-toc"] ol{list-style:none;padding:0;margin:.3em 0}
 nav[role="doc-toc"] ol ol{padding-inline-start:1.4em}
 nav[role="doc-toc"] li{margin:.15em 0}`,
   }
