@@ -172,7 +172,10 @@ nav[role="doc-toc"] li{margin:.15em 0}`,
       selector: '.arabic',
       familySelectors: '.arabic,.surah-title,.ayah-num',
       font: QURAN_FONT,
-      px: 23,
+      // 28px @ universal sheet ≈ 56.7px on the Clara raster — the same on-screen
+      // size as the Juz 'Amma book's Arabic (1.7em = 27.2px -> ~55px), which the
+      // user picked as the reference. Translation stays 16px (~32px on screen).
+      px: 28,
       lineHeight: 2.0,
     },
     // One group -> all 114 surahs so the TOC/chapter list fills.
