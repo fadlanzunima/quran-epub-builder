@@ -22,7 +22,7 @@ from PIL import Image
 
 def esc(s): return html.escape(str(s), quote=True)
 
-def build(src_pdf, out_path, title, limit=0, width=1072, colors=16):
+def build(src_pdf, out_path, title, limit=0, width=1072, colors=16, cover_jpeg=False):
     doc = fitz.open(src_pdf)
     n = len(doc)
     if limit and limit < n:
@@ -36,15 +36,29 @@ def build(src_pdf, out_path, title, limit=0, width=1072, colors=16):
 
     # The pages are flat art (cream ground + dark-green text), so a 16-colour
     # paletted PNG is both sharp AND ~3x smaller than JPEG for this content.
-    pages = []       # (name, png-bytes)
+    pages = []       # (name, bytes)
     for i in range(n):
         pix = doc[i].get_pixmap(matrix=fitz.Matrix(zoom, zoom), alpha=False)
         if i == 0:
             IMG_W, IMG_H = pix.width, pix.height   # use the REAL pixel size (not rounded)
         img = Image.frombytes("RGB", (pix.width, pix.height), pix.samples)
         buf = io.BytesIO()
-        img.convert("P", palette=Image.ADAPTIVE, colors=colors).save(buf, "PNG", optimize=True)
-        pages.append((f"page-{i+1:04d}.png", buf.getvalue()))
+        if i == 0 and cover_jpeg:
+            # photographic cover: a low-colour palette would posterize it badly;
+            # one JPEG page costs little and keeps the artwork intact.
+            img.save(buf, "JPEG", quality=90, optimize=True)
+            pages.append((f"page-{i+1:04d}.jpg", buf.getvalue()))
+        elif colors <= 2:
+            # pure B/W via threshold, NOT adaptive palette: books with soft
+            # grey/green ink (e.g. Dzikir) would otherwise keep pale text that
+            # washes out on e-ink. Threshold forces ink -> solid black; 1-bit
+            # PNG is also the smallest encoding.
+            bw = img.convert("L").point(lambda v: 255 if v >= 190 else 0, mode="1")
+            bw.save(buf, "PNG", optimize=True)
+            pages.append((f"page-{i+1:04d}.png", buf.getvalue()))
+        else:
+            img.convert("P", palette=Image.ADAPTIVE, colors=colors).save(buf, "PNG", optimize=True)
+            pages.append((f"page-{i+1:04d}.png", buf.getvalue()))
 
     MOD = "2026-11-25T00:00:00Z"
     UID = "urn:uuid:quran-clara-baked-v1"
@@ -79,8 +93,9 @@ def build(src_pdf, out_path, title, limit=0, width=1072, colors=16):
     manifest, spine = [], []
     for idx, (img_name, _) in enumerate(pages):
         pid = f"pg{idx+1}"
+        mime = "image/jpeg" if img_name.endswith(".jpg") else "image/png"
         manifest.append(f'    <item id="{pid}" href="text/{pid}.xhtml" media-type="application/xhtml+xml"/>')
-        manifest.append(f'    <item id="img{idx+1}" href="images/{img_name}" media-type="image/png"/>')
+        manifest.append(f'    <item id="img{idx+1}" href="images/{img_name}" media-type="{mime}"/>')
         props = ' properties="rendition:page-spread-center"'
         spine.append(f'    <itemref idref="{pid}"{props}/>')
     # cover image = first page
@@ -180,4 +195,5 @@ if __name__ == "__main__":
     limit = int(sys.argv[4]) if len(sys.argv) > 4 else 0
     width = int(sys.argv[5]) if len(sys.argv) > 5 else 1072
     colors = int(sys.argv[6]) if len(sys.argv) > 6 else 16
-    build(src, out, title, limit, width, colors)
+    cover_jpeg = len(sys.argv) > 7 and sys.argv[7].lower() in ("coverjpeg", "jpeg", "1", "true")
+    build(src, out, title, limit, width, colors, cover_jpeg)
