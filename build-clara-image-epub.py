@@ -109,7 +109,15 @@ def build(src_pdf, out_path, title, limit=0, width=1072, colors=16, cover_jpeg=F
     # NB: use a loop var other than `title` — reusing `title` would clobber the
     # book-title parameter, leaving dc:title/docTitle set to the LAST outline entry
     # (e.g. "114. An-Nas") instead of the real book name.
+    import re as _re
+    def latinize(t):
+        # Kobo's chapter-drawer UI font has NO Arabic -> tofu boxes. Strip the
+        # Arabic segment (keep the Latin part) when both are present.
+        stripped = _re.sub(r"[؀-ۿݐ-ݿﭐ-﷿ﹰ-﻿]+", "", t)
+        stripped = _re.sub(r"^\s*[—–-]\s*|\s*[—–-]\s*$", "", stripped.strip()).strip()
+        return stripped or t
     for lvl, ttl, pg in doc.get_toc():
+        ttl = latinize(ttl)
         if pg > n:
             continue
         # keep every outline level (group headers like "Juz 30" / "Dzikir Pagi"

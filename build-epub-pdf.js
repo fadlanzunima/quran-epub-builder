@@ -135,6 +135,29 @@ nav[role="doc-toc"] li{margin:.15em 0}`
 nav[role="doc-toc"] ol{list-style:none;padding:0;margin:.3em 0}
 nav[role="doc-toc"] ol ol{padding-inline-start:1.4em}
 nav[role="doc-toc"] li{margin:.15em 0}`,
+  },
+  terjemah: {
+    // Bilingual: Arabic + per-ayah Indonesian (Kemenag) translation cards.
+    epub: path.join(ROOT, 'dist', 'Al Quran dan Terjemahnya (Bahasa Indonesia)', 'epub', 'Universal', 'Al Quran dan Terjemahnya (Bahasa Indonesia).epub'),
+    pdf: path.join(ROOT, 'dist', 'Al Quran dan Terjemahnya (Bahasa Indonesia)', 'pdf', 'Kobo-Clara', 'Al Quran dan Terjemahnya (Clara).pdf'),
+    pdfX4: path.join(ROOT, 'dist', 'Al Quran dan Terjemahnya (Bahasa Indonesia)', 'pdf', 'Xteink-X4', 'Al Quran dan Terjemahnya Xteink X4.pdf'),
+    coverImage: path.join(ROOT, 'assets', 'al-quran-bahasa-indonesia.png'),
+    arabicSelector: '.arabic',
+    // Arabic-bearing bits of the verse card + surah banner -> Kemenag font.
+    arabicFamilySelectors: '.arabic,.surah-title,.ayah-num',
+    swapArabicFontFiles: ['ScheherazadeNew-Regular.ttf'],
+    arabic: {
+      selector: '.arabic',
+      familySelectors: '.arabic,.surah-title,.ayah-num',
+      font: QURAN_FONT,
+      px: 23,
+      lineHeight: 2.0,
+    },
+    // One group -> all 114 surahs so the TOC/chapter list fills.
+    outlineGroups: [{ title: 'Al-Qur’an dan Terjemahnya', match: /surah-\d+\.xhtml$/ }],
+    extraCss: `nav[role="doc-toc"] ol{list-style:none;padding:0;margin:.3em 0}
+nav[role="doc-toc"] ol ol{padding-inline-start:1.4em}
+nav[role="doc-toc"] li{margin:.15em 0}`,
   }
 };
 
