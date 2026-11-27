@@ -5,6 +5,11 @@ Format tanggal: YYYY-MM-DD.
 
 ---
 
+## 2026-11-27 (lanjutan 7) — Terjemah X4: ayat Arab diperbesar ke 22px
+- `.quran-flow` font-size →**22px** (17.6 masih kecil). Render-verified; 1714→2122 hlm.
+
+---
+
 ## 2026-11-27 (lanjutan 6) — Terjemah X4: ayat Arab +0.1x
 - `.quran-flow` font-size 16→**17.6px** (+10%) di `terjemah.extraCss`. Render-verified;
   halaman 1592→1714. Terjemahan tak diubah.

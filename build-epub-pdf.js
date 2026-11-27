@@ -198,7 +198,7 @@ html,body{padding:0!important;background:#fff!important;background-color:#fff!im
 .surah-name-tr{font-weight:bold!important;color:#000!important;font-size:13px!important}
 .surah-meta{font-weight:bold!important;color:#000!important;font-size:15px!important}
 .verse-card{border:0!important;border-radius:0!important;padding:0 0 .3em!important;margin:0 0 .4em!important;border-bottom:1px dotted #888!important;page-break-inside:auto!important;break-inside:auto!important;background:#fff!important}
-.quran-flow{text-align:right!important;font-size:17.6px!important;line-height:1.9!important}
+.quran-flow{text-align:right!important;font-size:22px!important;line-height:1.9!important}
 .translation{border-top:0!important;padding-top:.1em!important;margin:.15em 0 0!important;font-size:11px!important;line-height:1.45!important;color:#000!important;-webkit-text-stroke:0.2px #000!important}
 .tnum{font-weight:bold;margin-inline-end:.3em}
 .surah-divider{display:none!important}
