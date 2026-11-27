@@ -5,6 +5,12 @@ Format tanggal: YYYY-MM-DD.
 
 ---
 
+## 2026-11-27 (lanjutan 6) — Terjemah X4: ayat Arab +0.1x
+- `.quran-flow` font-size 16→**17.6px** (+10%) di `terjemah.extraCss`. Render-verified;
+  halaman 1592→1714. Terjemahan tak diubah.
+
+---
+
 ## 2026-11-27 (lanjutan 5) — Terjemah X4: teks terjemahan dipertebal sedikit
 - `.translation` → `color:#000` + `-webkit-text-stroke:0.2px` (sedikit lebih tebal,
   bukan bold penuh) di `terjemah.extraCss` [build-epub-pdf.js](build-epub-pdf.js).
