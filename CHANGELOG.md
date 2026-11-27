@@ -5,6 +5,23 @@ Format tanggal: YYYY-MM-DD.
 
 ---
 
+## 2026-11-27 (lanjutan 2) — Terjemah X4: cover full-page (aspek seluas layar)
+
+### Fixed — cover (& halaman) kena pita putih / tidak full-page di device
+- **Masalah:** halaman PDF terjemah beraspek 91×123mm (0,74), sedang layar X4
+  480×800 (0,6). Device/.xtc menampilkan fit-to-width + pertahankan aspek → **pita
+  putih atas/bawah**, paling kelihatan di cover (ber-artwork). (Al-Quran "kemarin"
+  penuh karena PDF-nya 480×800 native = seaspek layar.)
+- **Perbaikan:** tambah **override ukuran halaman per-buku** (`book.pageSize[pdfKey]`)
+  di [build-epub-pdf.js](build-epub-pdf.js) via `effProfile` (dipakai printCss &
+  assertDevicePdf). Terjemah X4 → **91×151,7mm = aspek 0,600** (= 480:800). Profil
+  `x4` global tak diubah (buku lain aman).
+- **Hasil:** cover **full-page edge-to-edge** (arch/masjid/bingkai utuh), semua
+  halaman penuh layar tanpa letterbox; 2827→**2255 hlm** (halaman lebih tinggi).
+  Device-assert PASS (258×430pt, 115 bookmark, Kemenag-only).
+
+---
+
 ## 2026-11-27 (lanjutan) — Terjemah X4: fit ke layar (buang bingkai)
 
 ### Fixed — konten tidak penuh layar (ada bingkai + whitespace)

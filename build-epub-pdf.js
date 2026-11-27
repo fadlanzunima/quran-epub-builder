@@ -183,6 +183,10 @@ nav[role="doc-toc"] li{margin:.15em 0}`,
     // Smaller margins on the tiny Xteink X4 sheet (user: "margin dikecilkan karena
     // layarnya") so the bilingual card (Arabic + translation) gets more room.
     margins: { pdfX4: '2mm' },
+    // Match the X4 SCREEN aspect (480:800 = 0.6) so the device shows the cover +
+    // pages full-screen (no letterbox). Keep ~91mm width (patokan text size);
+    // height 91*800/480 ≈ 151.7mm. Covers/pages then fill edge-to-edge on device.
+    pageSize: { pdfX4: { widthMm: 91, heightMm: 151.7 } },
     // One group -> all 114 surahs so the TOC/chapter list fills.
     outlineGroups: [{ title: 'Al-Qur’an dan Terjemahnya', match: /surah-\d+\.xhtml$/ }],
     // UNBOX the verse card: thin dotted rule between verses, tight spacing, and
@@ -506,15 +510,22 @@ ${arabic.selector}{font-size:${arabic.px}px!important;line-height:${arabic.lineH
     }
   }
 
+  // Per-book overrides for this output: margins and/or page size. Lets a book
+  // use a screen-matching aspect (e.g. terjemah 0.6 = X4 screen) so the device
+  // doesn't letterbox the cover, without touching the shared profile.
+  const effProfile = {
+    ...profile,
+    ...(book.margins && book.margins[profile.pdfKey] ? { marginCss: book.margins[profile.pdfKey] } : {}),
+    ...(book.pageSize && book.pageSize[profile.pdfKey] ? book.pageSize[profile.pdfKey] : {}),
+  };
+
   const printable = `<!doctype html>
 <html xmlns="http://www.w3.org/1999/xhtml" lang="ar">
 <head><meta charset="utf-8"/><meta name="viewport" content="width=device-width, initial-scale=1"/>
 <title>${path.basename(outPdf, '.pdf')}</title>
 ${styleLinks}
 ${styleBlocks}
-<style>${printCss(book.margins && book.margins[profile.pdfKey]
-    ? { ...profile, marginCss: book.margins[profile.pdfKey] }
-    : profile)}
+<style>${printCss(effProfile)}
 ${arabicCss}
 ${book.extraCss || ''}</style></head>
 <body>${coverSection}${chapters.join('\n')}${destLinks}</body></html>`;
@@ -560,7 +571,7 @@ ${book.extraCss || ''}</style></head>
       'Install it (`pip install pymupdf`) and rebuild — without bookmarks the .xtcz chapter list is empty.'
     );
   }
-  if (profile.verify) assertDevicePdf(outPdf, profile, outline.length);
+  if (profile.verify) assertDevicePdf(outPdf, effProfile, outline.length);
   return pageCount;
 }
 
