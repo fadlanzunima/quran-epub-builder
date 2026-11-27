@@ -5,6 +5,34 @@ Format tanggal: YYYY-MM-DD.
 
 ---
 
+## 2026-11-27 — Al-Qur'an + Terjemahan (Xteink X4, untuk .xtc)
+
+### Added — edisi bilingual `indo` dipulihkan di builder.js + PDF X4
+- **Konteks:** EPUB "Al Quran dan Terjemahnya" + generatornya hilang (tak ada di git),
+  dan `buildEdition` lama tak lagi mendukung bilingual (selalu ambil tanpa terjemahan,
+  render Arabic-only, tulis ke folder Al-Quran). Data cache lengkap (ayat `text_imlaei`
+  + terjemahan Kemenag id 33, `chapters_id`), jadi bisa direkonstruksi offline.
+- **builder.js:** tambah edisi `indo` ke EDITIONS (bilingual, `text_imlaei`, translationId
+  33, `chapterLang:id`, `outDir` ke folder terjemah). `buildEdition` kini: saat bilingual
+  → fetch dengan `translations`, render `surahXhtmlBilingual` (kartu Arab+terjemahan),
+  tulis ke `ed.outDir`. Build: `npm run build:terjemah-epub` (offline).
+- **build-epub-pdf.js:** `terjemah` disesuaikan dengan class ASLI builder (`.quran-flow`,
+  `.verse-card`, `.translation`, banner `.surah-name-ar/.bismillah/.ayah-num`; font
+  `QuranArabic`→Scheherazade di-swap ke Kemenag). Tambah **override margin per-buku**
+  (`book.margins[pdfKey]`) → X4 pakai **3mm** (user: "margin dikecilkan karena layarnya").
+- **Build:** `npm run build:terjemah-x4` → `dist/Al Quran dan Terjemahnya (Bahasa
+  Indonesia)/pdf/Xteink-X4/Al Quran dan Terjemahnya Xteink X4.pdf` — **91×123mm (patokan
+  X4), 115 bookmark, Arabic=Kemenag only, 3133 hlm, 50 MB**. Siap dikonversi ke .xtc via
+  aplikasi Xteink resmi (lihat [[xteink-delivery-workflow]]).
+- **Cover:** `assets/al-quran-bahasa-indonesia.png` ("Al-Qur'an / Terjemahan Bahasa
+  Indonesia", masjid + bingkai) — full-bleed.
+- **Verifikasi render:** cover penuh; Al-Fatihah banner "1. Al-Fatihah — Pembukaan",
+  bismillah Kemenag tersambung, tiap ayat = Arab Kemenag + terjemahan Kemenag
+  ("1:1 Dengan nama Allah Yang Maha Pengasih…"), kartu dipisah garis titik-titik,
+  margin ketat. Device-assert PASS (ukuran, bookmark, font Kemenag-only).
+
+---
+
 ## 2026-11-26 (lanjutan) — Kobo Clara: fix judul, margin, + versi teks (highlight)
 
 ### Fixed — judul buku jadi "114. An-Nas" (bukan "Al-Qur'an al-Karim")

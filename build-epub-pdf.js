@@ -164,27 +164,34 @@ nav[role="doc-toc"] li{margin:.15em 0}`,
     pdfX4: path.join(ROOT, 'dist', 'Al Quran dan Terjemahnya (Bahasa Indonesia)', 'pdf', 'Xteink-X4', 'Al Quran dan Terjemahnya Xteink X4.pdf'),
     coverImage: path.join(ROOT, 'assets', 'al-quran-bahasa-indonesia.png'),
     skipNav: true,
-    arabicSelector: '.arabic',
+    // builder.js `indo` edition emits: .quran-flow (Arabic verse), .verse-card
+    // (the card), .translation/.tnum, and the shared surah banner (.surah-name-ar,
+    // .bismillah, .ayah-num). Font family is 'QuranArabic' -> ScheherazadeNew.
+    arabicSelector: '.quran-flow',
     // Arabic-bearing bits of the verse card + surah banner -> Kemenag font.
-    arabicFamilySelectors: '.arabic,.surah-title,.ayah-num',
+    arabicFamilySelectors: '.quran-flow,.surah-name-ar,.bismillah,.ayah-num',
     swapArabicFontFiles: ['ScheherazadeNew-Regular.ttf'],
     arabic: {
-      selector: '.arabic',
-      familySelectors: '.arabic,.surah-title,.ayah-num',
+      selector: '.quran-flow',
+      familySelectors: '.quran-flow,.surah-name-ar,.bismillah,.ayah-num',
       font: QURAN_FONT,
-      // 28px @ universal sheet ≈ 56.7px on the Clara raster — the same on-screen
-      // size as the Juz 'Amma book's Arabic (1.7em = 27.2px -> ~55px), which the
-      // user picked as the reference. Translation stays 16px (~32px on screen).
+      // Used by non-baked profiles (universal/clara). The x4 profile overrides
+      // this with profile.arabicPx (20px) to match the Al-Quran X4 reference.
       px: 28,
       lineHeight: 2.0,
     },
+    // Smaller margins on the tiny Xteink X4 sheet (user: "margin dikecilkan karena
+    // layarnya") so the bilingual card (Arabic + translation) gets more room.
+    margins: { pdfX4: '3mm' },
     // One group -> all 114 surahs so the TOC/chapter list fills.
     outlineGroups: [{ title: 'Al-Qur’an dan Terjemahnya', match: /surah-\d+\.xhtml$/ }],
-    // UNBOX the verse card: the 1px rounded frame + fat padding + 1em gap eat
-    // a lot of the small page. A thin dotted rule under each verse keeps the
-    // separation; the Arabic/translation divider stays but hugs tighter.
-    extraCss: `.verse{border:0!important;border-radius:0!important;padding:0 0 .3em!important;margin:0 0 .4em!important;border-bottom:1px dotted #888!important;page-break-inside:auto!important;break-inside:auto!important}
-.translation{border-top:0!important;padding-top:.1em!important;margin:.15em 0 0!important}
+    // UNBOX the verse card: thin dotted rule between verses, tight spacing, and
+    // keep the Indonesian translation hugging its Arabic.
+    extraCss: `.verse-card{border:0!important;border-radius:0!important;padding:0 0 .3em!important;margin:0 0 .4em!important;border-bottom:1px dotted #888!important;page-break-inside:auto!important;break-inside:auto!important}
+.quran-flow{text-align:right!important}
+.translation{border-top:0!important;padding-top:.1em!important;margin:.15em 0 0!important;font-size:13px!important;line-height:1.5!important}
+.tnum{font-weight:bold;margin-inline-end:.3em}
+.surah-divider{display:none!important}
 nav[role="doc-toc"] ol{list-style:none;padding:0;margin:.3em 0}
 nav[role="doc-toc"] ol ol{padding-inline-start:1.4em}
 nav[role="doc-toc"] li{margin:.15em 0}`,
@@ -503,7 +510,9 @@ ${arabic.selector}{font-size:${arabic.px}px!important;line-height:${arabic.lineH
 <title>${path.basename(outPdf, '.pdf')}</title>
 ${styleLinks}
 ${styleBlocks}
-<style>${printCss(profile)}
+<style>${printCss(book.margins && book.margins[profile.pdfKey]
+    ? { ...profile, marginCss: book.margins[profile.pdfKey] }
+    : profile)}
 ${arabicCss}
 ${book.extraCss || ''}</style></head>
 <body>${coverSection}${chapters.join('\n')}${destLinks}</body></html>`;

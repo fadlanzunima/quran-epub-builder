@@ -91,6 +91,29 @@ const EDITIONS = {
       file: 'ScheherazadeNew-Regular.ttf',
       url: 'https://github.com/google/fonts/raw/main/ofl/scheherazadenew/ScheherazadeNew-Regular.ttf'
     }
+  },
+  // Bilingual: Arabic (Imla'i) + per-ayah Indonesian Kemenag translation cards.
+  // Feeds build-epub-pdf.js `terjemah` (-> Xteink X4 / Kobo image). Writes to its
+  // own book folder, not dist/Al-Quran. Data is fully cached (text_imlaei + id 33).
+  indo: {
+    id: 'indo',
+    filename: 'Al Quran dan Terjemahnya (Bahasa Indonesia).epub',
+    outDir: path.join('Al Quran dan Terjemahnya (Bahasa Indonesia)', 'epub', 'Universal'),
+    bookTitle: 'Al-Qur’an dan Terjemahnya',
+    bookSubtitle: 'Terjemahan Kementerian Agama RI',
+    language: 'id',
+    pageDir: 'rtl',
+    bilingual: true,
+    arabicField: 'text_imlaei',
+    translationId: 33,            // Indonesian Islamic Affairs Ministry (Kemenag)
+    chapterLang: 'id',            // surah meanings in Indonesian
+    fontCandidates: [
+      'ScheherazadeNew-Regular.ttf', 'ScheherazadeNew.ttf'
+    ],
+    fontAutoDownload: {
+      file: 'ScheherazadeNew-Regular.ttf',
+      url: 'https://github.com/google/fonts/raw/main/ofl/scheherazadenew/ScheherazadeNew-Regular.ttf'
+    }
   }
 };
 
@@ -749,9 +772,14 @@ async function buildEdition(ed, shared) {
   const opts = { divider: hasDivider };
   process.stdout.write('  fetching surahs: ');
   for (const ch of chapters) {
-    const verses = await fetchVerses(ch.id, { fields: `${ed.arabicField},page_number` });
-    const pagesInSurah = new Set(verses.map(v => v.page_number)); pageCount += pagesInSurah.size;
-    oebps.file(`text/surah-${pad3(ch.id)}.xhtml`, surahXhtmlArabic(ed, ch, verses, opts));
+    // Bilingual fetches the Indonesian translation alongside the Arabic (no
+    // page_number grouping — it renders stacked verse cards, not mushaf pages).
+    const verses = ed.bilingual
+      ? await fetchVerses(ch.id, { fields: ed.arabicField, translations: ed.translationId })
+      : await fetchVerses(ch.id, { fields: `${ed.arabicField},page_number` });
+    const pagesInSurah = new Set(verses.map(v => v.page_number || ch.id)); pageCount += pagesInSurah.size;
+    const renderSurah = ed.bilingual ? surahXhtmlBilingual : surahXhtmlArabic;
+    oebps.file(`text/surah-${pad3(ch.id)}.xhtml`, renderSurah(ed, ch, verses, opts));
     process.stdout.write(ch.id % 10 === 0 ? `${ch.id} ` : '.');
   }
   console.log('done');
@@ -772,7 +800,7 @@ async function buildEdition(ed, shared) {
   oebps.file('content.opf', contentOpf(ed, contentFiles, font, hasCoverImage, imageList, uid, modified));
 
   // Write .epub (grouped: name -> format -> device)
-  const out = path.join(DIST, 'Al-Quran', 'epub', 'Universal', ed.filename);
+  const out = path.join(DIST, ed.outDir || path.join('Al-Quran', 'epub', 'Universal'), ed.filename);
   ensureDir(path.dirname(out));
   const buf = await zip.generateAsync({
     type: 'nodebuffer',
