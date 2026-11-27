@@ -182,12 +182,14 @@ nav[role="doc-toc"] li{margin:.15em 0}`,
     },
     // Smaller margins on the tiny Xteink X4 sheet (user: "margin dikecilkan karena
     // layarnya") so the bilingual card (Arabic + translation) gets more room.
-    margins: { pdfX4: '3mm' },
+    margins: { pdfX4: '2mm' },
     // One group -> all 114 surahs so the TOC/chapter list fills.
     outlineGroups: [{ title: 'Al-Qur’an dan Terjemahnya', match: /surah-\d+\.xhtml$/ }],
     // UNBOX the verse card: thin dotted rule between verses, tight spacing, and
     // keep the Indonesian translation hugging its Arabic.
-    extraCss: `.verse-card{border:0!important;border-radius:0!important;padding:0 0 .3em!important;margin:0 0 .4em!important;border-bottom:1px dotted #888!important;page-break-inside:auto!important;break-inside:auto!important}
+    extraCss: `.page{border:0!important;border-radius:0!important;padding:0!important;margin:0!important;page-break-before:auto!important;break-before:auto!important}
+body{padding:0!important}
+.verse-card{border:0!important;border-radius:0!important;padding:0 0 .3em!important;margin:0 0 .4em!important;border-bottom:1px dotted #888!important;page-break-inside:auto!important;break-inside:auto!important}
 .quran-flow{text-align:right!important}
 .translation{border-top:0!important;padding-top:.1em!important;margin:.15em 0 0!important;font-size:13px!important;line-height:1.5!important}
 .tnum{font-weight:bold;margin-inline-end:.3em}

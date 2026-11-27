@@ -5,6 +5,19 @@ Format tanggal: YYYY-MM-DD.
 
 ---
 
+## 2026-11-27 (lanjutan) — Terjemah X4: fit ke layar (buang bingkai)
+
+### Fixed — konten tidak penuh layar (ada bingkai + whitespace)
+- **Masalah:** di perangkat, halaman terjemah punya **bingkai `.page`** (`border:4px
+  double` + `padding:.7em`) dan `body{padding:0 4%}` → konten menyusut, tak penuh layar.
+- **Perbaikan:** `terjemah.extraCss` di [build-epub-pdf.js](build-epub-pdf.js) kini
+  meng-unbox `.page` (border/padding/margin 0, break-before auto) dan `body{padding:0}`;
+  margin X4 3mm→**2mm**. Banner surah (cartouche) tetap.
+- **Hasil:** konten **penuh layar** (edge-to-edge, sisa margin 2mm); 3133→**2827 hlm**.
+  Device-assert tetap PASS (91×123mm, 115 bookmark, Kemenag-only).
+
+---
+
 ## 2026-11-27 — Al-Qur'an + Terjemahan (Xteink X4, untuk .xtc)
 
 ### Added — edisi bilingual `indo` dipulihkan di builder.js + PDF X4
