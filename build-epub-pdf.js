@@ -193,7 +193,10 @@ nav[role="doc-toc"] li{margin:.15em 0}`,
     // keep the Indonesian translation hugging its Arabic.
     extraCss: `.page{border:0!important;border-radius:0!important;padding:0!important;margin:0!important;page-break-before:auto!important;break-before:auto!important;background:#fff!important}
 html,body{padding:0!important;background:#fff!important;background-color:#fff!important}
-.surah-banner{background:#fff!important}
+.surah-banner{background:#fff!important;border-color:#333!important}
+.surah-name-ar{font-weight:bold!important;color:#000!important}
+.surah-name-tr{font-weight:bold!important;color:#000!important;font-size:13px!important}
+.surah-meta{font-weight:bold!important;color:#000!important;font-size:15px!important}
 .verse-card{border:0!important;border-radius:0!important;padding:0 0 .3em!important;margin:0 0 .4em!important;border-bottom:1px dotted #888!important;page-break-inside:auto!important;break-inside:auto!important;background:#fff!important}
 .quran-flow{text-align:right!important;font-size:16px!important;line-height:1.9!important}
 .translation{border-top:0!important;padding-top:.1em!important;margin:.15em 0 0!important;font-size:11px!important;line-height:1.45!important}

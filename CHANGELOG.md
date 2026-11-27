@@ -5,6 +5,19 @@ Format tanggal: YYYY-MM-DD.
 
 ---
 
+## 2026-11-27 (lanjutan 4) — Terjemah X4: banner surah diperjelas
+
+### Changed — banner (judul surah) ditebalkan & total ayat diperbesar
+- **Masalah:** di terjemah, banner pakai warna/berat bawaan EPUB (Latin abu, meta
+  kecil) — total ayat tampak kecil/pudar di device.
+- **Perbaikan** (`terjemah.extraCss` [build-epub-pdf.js](build-epub-pdf.js)):
+  `.surah-name-ar`/`.surah-name-tr`/`.surah-meta` → **bold + hitam**; meta (total
+  ayat) **font-size 15px**; border banner lebih gelap (#333).
+- **Verifikasi render (Al-Kahf 18):** nama Arab tebal hitam, "18. Al-Kahf — Para
+  Penghuni Gua" tebal hitam, total ayat **⬡١١٠⬡ · Makkiyyah آيات** besar & jelas.
+
+---
+
 ## 2026-11-27 (lanjutan 3) — Terjemah X4: background titik hilang + teks dikecilkan
 
 ### Fixed — background "titik halus" (dither) di e-ink
