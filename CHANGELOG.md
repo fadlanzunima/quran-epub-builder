@@ -5,6 +5,24 @@ Format tanggal: YYYY-MM-DD.
 
 ---
 
+## 2026-11-27 (lanjutan 3) — Terjemah X4: background titik hilang + teks dikecilkan
+
+### Fixed — background "titik halus" (dither) di e-ink
+- **Masalah:** di device muncul pola titik halus di latar. Sebab: latar konten bukan
+  putih murni — **~246/255 (tint krem `--paper` dari EPUB)**; `build-epub-pdf.js`
+  printCss tak meng-override background. E-ink men-*dither* krem itu → pola titik.
+  (Histogram: hanya 6% putih murni, 86% near-white 246.)
+- **Perbaikan:** paksa `html,body,.page,.verse-card,.surah-banner{background:#fff}`
+  di `terjemah.extraCss`. Histogram sesudah: **90,8% putih murni** → titik hilang.
+
+### Changed — ukuran teks dikecilkan (per permintaan)
+- Arab **20→16px**, terjemahan **13→11px**, line-height dirapatkan. Lebih banyak ayat
+  per halaman (Al-Fatihah: 5→6 ayat/hlm); total **2255→1590 hlm**.
+- **Verifikasi render:** latar putih bersih, Arab Kemenag tersambung, terjemahan muat
+  lebih padat. Device-assert PASS (258×430pt, 115 bookmark, Kemenag-only).
+
+---
+
 ## 2026-11-27 (lanjutan 2) — Terjemah X4: cover full-page (aspek seluas layar)
 
 ### Fixed — cover (& halaman) kena pita putih / tidak full-page di device

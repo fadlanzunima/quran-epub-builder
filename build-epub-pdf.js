@@ -191,11 +191,12 @@ nav[role="doc-toc"] li{margin:.15em 0}`,
     outlineGroups: [{ title: 'Al-Qur’an dan Terjemahnya', match: /surah-\d+\.xhtml$/ }],
     // UNBOX the verse card: thin dotted rule between verses, tight spacing, and
     // keep the Indonesian translation hugging its Arabic.
-    extraCss: `.page{border:0!important;border-radius:0!important;padding:0!important;margin:0!important;page-break-before:auto!important;break-before:auto!important}
-body{padding:0!important}
-.verse-card{border:0!important;border-radius:0!important;padding:0 0 .3em!important;margin:0 0 .4em!important;border-bottom:1px dotted #888!important;page-break-inside:auto!important;break-inside:auto!important}
-.quran-flow{text-align:right!important}
-.translation{border-top:0!important;padding-top:.1em!important;margin:.15em 0 0!important;font-size:13px!important;line-height:1.5!important}
+    extraCss: `.page{border:0!important;border-radius:0!important;padding:0!important;margin:0!important;page-break-before:auto!important;break-before:auto!important;background:#fff!important}
+html,body{padding:0!important;background:#fff!important;background-color:#fff!important}
+.surah-banner{background:#fff!important}
+.verse-card{border:0!important;border-radius:0!important;padding:0 0 .3em!important;margin:0 0 .4em!important;border-bottom:1px dotted #888!important;page-break-inside:auto!important;break-inside:auto!important;background:#fff!important}
+.quran-flow{text-align:right!important;font-size:16px!important;line-height:1.9!important}
+.translation{border-top:0!important;padding-top:.1em!important;margin:.15em 0 0!important;font-size:11px!important;line-height:1.45!important}
 .tnum{font-weight:bold;margin-inline-end:.3em}
 .surah-divider{display:none!important}
 nav[role="doc-toc"] ol{list-style:none;padding:0;margin:.3em 0}
