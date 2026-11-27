@@ -5,6 +5,14 @@ Format tanggal: YYYY-MM-DD.
 
 ---
 
+## 2026-11-27 (lanjutan 5) — Terjemah X4: teks terjemahan dipertebal sedikit
+- `.translation` → `color:#000` + `-webkit-text-stroke:0.2px` (sedikit lebih tebal,
+  bukan bold penuh) di `terjemah.extraCss` [build-epub-pdf.js](build-epub-pdf.js).
+  Sebelumnya abu (var --muted) + normal. Render-verified (Al-Fatihah): terjemahan
+  lebih mantap/jelas, tak berlebihan.
+
+---
+
 ## 2026-11-27 (lanjutan 4) — Terjemah X4: banner surah diperjelas
 
 ### Changed — banner (judul surah) ditebalkan & total ayat diperbesar
