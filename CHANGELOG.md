@@ -5,6 +5,13 @@ Format tanggal: YYYY-MM-DD.
 
 ---
 
+## 2026-11-27 (lanjutan 8) — Terjemah X4: banner dirapatkan + margin V = Al-Quran
+- Banner: padding `.22em .4em`, jarak antar-baris dikecilkan (nama/judul/meta rapat).
+- Margin X4 `2mm` → **`3mm 2mm`** (atas/bawah 3mm = sama Al-Quran X4 `marginVMm`, kiri/kanan 2mm).
+- Render-verified: margin atas 2.0% (=3mm) simetris; banner ramping. 2122→2140 hlm.
+
+---
+
 ## 2026-11-27 (lanjutan 7) — Terjemah X4: ayat Arab diperbesar ke 22px
 - `.quran-flow` font-size →**22px** (17.6 masih kecil). Render-verified; 1714→2122 hlm.
 

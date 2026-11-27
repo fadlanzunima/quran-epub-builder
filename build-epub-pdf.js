@@ -182,7 +182,9 @@ nav[role="doc-toc"] li{margin:.15em 0}`,
     },
     // Smaller margins on the tiny Xteink X4 sheet (user: "margin dikecilkan karena
     // layarnya") so the bilingual card (Arabic + translation) gets more room.
-    margins: { pdfX4: '2mm' },
+    // Top/bottom margin matched to the Al-Quran X4 (build-xteink-pdf.js marginVMm=3mm);
+    // horizontal kept tight at 2mm. Order: "<vertical> <horizontal>".
+    margins: { pdfX4: '3mm 2mm' },
     // Match the X4 SCREEN aspect (480:800 = 0.6) so the device shows the cover +
     // pages full-screen (no letterbox). Keep ~91mm width (patokan text size);
     // height 91*800/480 ≈ 151.7mm. Covers/pages then fill edge-to-edge on device.
@@ -193,10 +195,10 @@ nav[role="doc-toc"] li{margin:.15em 0}`,
     // keep the Indonesian translation hugging its Arabic.
     extraCss: `.page{border:0!important;border-radius:0!important;padding:0!important;margin:0!important;page-break-before:auto!important;break-before:auto!important;background:#fff!important}
 html,body{padding:0!important;background:#fff!important;background-color:#fff!important}
-.surah-banner{background:#fff!important;border-color:#333!important}
-.surah-name-ar{font-weight:bold!important;color:#000!important}
-.surah-name-tr{font-weight:bold!important;color:#000!important;font-size:13px!important}
-.surah-meta{font-weight:bold!important;color:#000!important;font-size:15px!important}
+.surah-banner{background:#fff!important;border-color:#333!important;padding:.22em .4em!important;margin:0 0 .35em!important}
+.surah-name-ar{font-weight:bold!important;color:#000!important;margin:0!important;line-height:1.05!important}
+.surah-name-tr{font-weight:bold!important;color:#000!important;font-size:13px!important;margin:.04em 0 0!important;line-height:1.15!important}
+.surah-meta{font-weight:bold!important;color:#000!important;font-size:15px!important;margin:.02em 0 0!important;line-height:1.1!important}
 .verse-card{border:0!important;border-radius:0!important;padding:0 0 .3em!important;margin:0 0 .4em!important;border-bottom:1px dotted #888!important;page-break-inside:auto!important;break-inside:auto!important;background:#fff!important}
 .quran-flow{text-align:right!important;font-size:22px!important;line-height:1.9!important}
 .translation{border-top:0!important;padding-top:.1em!important;margin:.15em 0 0!important;font-size:11px!important;line-height:1.45!important;color:#000!important;-webkit-text-stroke:0.2px #000!important}
